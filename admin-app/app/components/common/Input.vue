@@ -25,10 +25,13 @@ const emit = defineEmits<{
   focus: []
 }>()
 
+const hasError = computed(() => {
+  return typeof props.error === 'string' && props.error.length > 0
+})
+
 const inputClasses = computed(() => {
   const base = 'w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
-  const hasError = typeof props.error === 'string' && props.error.length > 0
-  if (hasError) {
+  if (hasError.value) {
     return `${base} border-red-500 bg-red-50`
   }
   if (props.disabled) {

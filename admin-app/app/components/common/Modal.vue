@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
-defineOptions({
-  inheritAttrs: false,
-})
-
 interface Props {
   modelValue?: boolean
   open?: boolean
@@ -40,8 +36,8 @@ const sizeClasses = computed(() => {
 })
 
 const handleEscape = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && props.open) {
-    emit('close')
+  if (event.key === 'Escape' && (props.modelValue || props.open)) {
+    emit('update:modelValue', false)
   }
 }
 

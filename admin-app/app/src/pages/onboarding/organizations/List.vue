@@ -3,7 +3,8 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, Table, Modal, Input, Alert, Spinner, Card } from '@/components'
 import { useOrganizationsStore } from '@/stores'
-import type { Organization } from '@/types'
+import OrganizationForm from '@/components/organizations/OrganizationForm.vue'
+import type { Organization, CreateOrganizationDto } from '@/types'
 
 const router = useRouter()
 const organizationsStore = useOrganizationsStore()
@@ -14,25 +15,24 @@ const searchQuery = ref('')
 const pageSize = ref(10)
 const currentPage = ref(1)
 const selectedForDelete = ref<Organization | null>(null)
-
-const formData = ref({
-  name: '',
-  status: 'active' as const,
-})
+const isCreating = ref(false)
 
 const columns = [
-  { key: 'id', label: 'ID', width: '20%' },
-  { key: 'name', label: 'Name', width: '30%' },
+  { key: 'id', label: 'ID', width: '15%' },
+  { key: 'legalName', label: 'Legal Name', width: '25%' },
+  { key: 'doingBusinessAs', label: 'DBA', width: '20%' },
   { key: 'status', label: 'Status', width: '15%' },
-  { key: 'createdAt', label: 'Created', width: '20%' },
-  { key: 'actions', label: 'Actions', width: '15%' },
+  { key: 'createdAt', label: 'Created', width: '15%' },
+  { key: 'actions', label: 'Actions', width: '10%' },
 ]
 
 const filteredItems = computed(() => {
   if (!searchQuery.value) return organizationsStore.items
+  const query = searchQuery.value.toLowerCase()
   return organizationsStore.items.filter((org: Organization) =>
-    org.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    org.id.toLowerCase().includes(searchQuery.value.toLowerCase())
+    org.legalName.toLowerCase().includes(query) ||
+    org.doingBusinessAs?.toLowerCase().includes(query) ||
+    org.id.toLowerCase().includes(query)
   )
 })
 
@@ -59,31 +59,24 @@ const loadOrganizations = async () => {
 }
 
 const openCreateModal = () => {
-  formData.value = { name: '', status: 'active' }
   showCreateModal.value = true
 }
 
 const closeCreateModal = () => {
   showCreateModal.value = false
-  formData.value = { name: '', status: 'active' }
 }
 
-const handleCreate = async () => {
-  if (!formData.value.name.trim()) {
-    alert('Organization name is required')
-    return
-  }
-
+const handleCreateSubmit = async (payload: CreateOrganizationDto) => {
+  isCreating.value = true
   try {
-    await organizationsStore.create({
-      name: formData.value.name,
-      status: formData.value.status,
-    })
+    await organizationsStore.create(payload)
     closeCreateModal()
     await loadOrganizations()
   } catch (error) {
     console.error('Failed to create organization:', error)
-    alert('Failed to create organization')
+    organizationsStore.error = 'Failed to create organization'
+  } finally {
+    isCreating.value = false
   }
 }
 
@@ -110,7 +103,7 @@ const handleDelete = async () => {
     await loadOrganizations()
   } catch (error) {
     console.error('Failed to delete organization:', error)
-    alert('Failed to delete organization')
+    organizationsStore.error = 'Failed to delete organization'
   }
 }
 
@@ -146,8 +139,7 @@ const formatDate = (dateString: string) => {
           <Input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by name or ID..."
-            class="flex-1"
+            placeholder="Search by name, DBA, or ID..."
           />
           <Button @click="loadOrganizations" variant="secondary">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,18 +187,21 @@ const formatDate = (dateString: string) => {
                   {{ org.id.substring(0, 8) }}...
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {{ org.name }}
+                  {{ org.legalName }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {{ org.doingBusinessAs || 'N/A' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                   <span
                     :class="[
                       'px-2 py-1 rounded-full text-xs font-semibold',
-                      org.status === 'active'
+                      org.status?.code === 'ACTIVE'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800',
                     ]"
                   >
-                    {{ org.status }}
+                    {{ org.status?.code || 'UNKNOWN' }}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -271,35 +266,12 @@ const formatDate = (dateString: string) => {
     </div>
 
     <!-- Create Modal -->
-    <Modal v-model="showCreateModal" title="Create Organization">
-      <div class="space-y-4">
-        <Input
-          v-model="formData.name"
-          label="Organization Name"
-          type="text"
-          placeholder="Enter organization name"
-          required
-        />
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <select
-            v-model="formData.status"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex gap-3 justify-end">
-          <Button @click="closeCreateModal" variant="secondary">Cancel</Button>
-          <Button @click="handleCreate" variant="primary" :disabled="organizationsStore.loading">
-            {{ organizationsStore.loading ? 'Creating...' : 'Create' }}
-          </Button>
-        </div>
-      </template>
+    <Modal v-model="showCreateModal" title="Create Organization" size="lg">
+      <OrganizationForm
+        :is-loading="isCreating"
+        @submit="handleCreateSubmit"
+        @cancel="closeCreateModal"
+      />
     </Modal>
 
     <!-- Delete Confirmation Modal -->
@@ -307,7 +279,7 @@ const formatDate = (dateString: string) => {
       <div>
         <p class="text-gray-600">
           Are you sure you want to delete
-          <strong>{{ selectedForDelete?.name }}</strong>
+          <strong>{{ selectedForDelete?.legalName }}</strong>
           ? This action cannot be undone.
         </p>
       </div>
