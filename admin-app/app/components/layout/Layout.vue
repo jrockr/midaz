@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { RouterView } from 'vue-router'
 import Sidebar from './Sidebar.vue'
 import TopBar from './TopBar.vue'
 
@@ -23,7 +24,7 @@ const toggleSidebar = () => {
       <!-- Page Content -->
       <main class="flex-1 overflow-y-auto">
         <div class="container mx-auto px-4 py-8">
-          <slot />
+          <RouterView />
         </div>
       </main>
     </div>
