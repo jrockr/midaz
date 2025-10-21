@@ -8,11 +8,15 @@ export const useLedgersStore = defineStore('ledgers', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const fetch = async (params?: any) => {
+  const fetch = async (params?: { organizationId: string; limit?: number; offset?: number }) => {
+    if (!params?.organizationId) {
+      error.value = 'Organization ID is required'
+      return
+    }
     loading.value = true
     error.value = null
     try {
-      const response = await ledgersService.list(params)
+      const response = await ledgersService.list(params.organizationId, params)
       items.value = response.data || []
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch ledgers'
@@ -21,11 +25,13 @@ export const useLedgersStore = defineStore('ledgers', () => {
     }
   }
 
-  const create = async (payload: any) => {
+  const fetchAll = fetch
+
+  const create = async (organizationId: string, payload: any) => {
     loading.value = true
     error.value = null
     try {
-      const response = await ledgersService.create(payload)
+      const response = await ledgersService.create(organizationId, payload)
       items.value.push(response)
       return response
     } catch (err: unknown) {
@@ -36,11 +42,11 @@ export const useLedgersStore = defineStore('ledgers', () => {
     }
   }
 
-  const getById = async (id: string) => {
+  const getById = async (organizationId: string, id: string) => {
     loading.value = true
     error.value = null
     try {
-      const response = await ledgersService.getById(id)
+      const response = await ledgersService.getById(organizationId, id)
       selectedId.value = id
       return response
     } catch (err: unknown) {
@@ -51,11 +57,11 @@ export const useLedgersStore = defineStore('ledgers', () => {
     }
   }
 
-  const update = async (id: string, payload: any) => {
+  const update = async (organizationId: string, id: string, payload: any) => {
     loading.value = true
     error.value = null
     try {
-      const response = await ledgersService.update(id, payload)
+      const response = await ledgersService.update(organizationId, id, payload)
       const index = items.value.findIndex((item: any) => item.id === id)
       if (index !== -1) {
         items.value[index] = response
@@ -69,11 +75,11 @@ export const useLedgersStore = defineStore('ledgers', () => {
     }
   }
 
-  const remove = async (id: string) => {
+  const remove = async (organizationId: string, id: string) => {
     loading.value = true
     error.value = null
     try {
-      await ledgersService.delete(id)
+      await ledgersService.delete(organizationId, id)
       items.value = items.value.filter((item: any) => item.id !== id)
       return true
     } catch (err: unknown) {
@@ -90,6 +96,7 @@ export const useLedgersStore = defineStore('ledgers', () => {
     loading,
     error,
     fetch,
+    fetchAll,
     create,
     getById,
     update,

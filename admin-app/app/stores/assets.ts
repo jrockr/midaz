@@ -21,11 +21,15 @@ export const useAssetsStore = defineStore('assets', () => {
   const hasMore = computed(() => pagination.value.offset + pagination.value.limit < pagination.value.total)
 
   // Actions
-  const fetch = async (params?: { limit?: number; offset?: number; search?: string }) => {
+  const fetch = async (params?: { organizationId: string; ledgerId: string; limit?: number; offset?: number; search?: string }) => {
+    if (!params?.organizationId || !params?.ledgerId) {
+      error.value = 'Organization ID and Ledger ID are required'
+      return
+    }
     loading.value = true
     error.value = null
     try {
-      const response = await assetsService.list(params)
+      const response = await assetsService.list(params.organizationId, params.ledgerId, params)
       items.value = response.data || []
       if (response.pagination) {
         pagination.value = response.pagination
@@ -39,11 +43,11 @@ export const useAssetsStore = defineStore('assets', () => {
     }
   }
 
-  const create = async (payload: CreateAssetDto): Promise<Asset | null> => {
+  const create = async (organizationId: string, ledgerId: string, payload: CreateAssetDto): Promise<Asset | null> => {
     loading.value = true
     error.value = null
     try {
-      const response = await assetsService.create(payload)
+      const response = await assetsService.create(organizationId, ledgerId, payload)
       items.value.push(response)
       pagination.value.total += 1
       return response
@@ -57,11 +61,11 @@ export const useAssetsStore = defineStore('assets', () => {
     }
   }
 
-  const getById = async (id: string): Promise<Asset | null> => {
+  const getById = async (organizationId: string, ledgerId: string, id: string): Promise<Asset | null> => {
     loading.value = true
     error.value = null
     try {
-      const response = await assetsService.getById(id)
+      const response = await assetsService.getById(organizationId, ledgerId, id)
       selectedId.value = id
       const index = items.value.findIndex((asset) => asset.id === id)
       if (index !== -1) {
@@ -80,11 +84,11 @@ export const useAssetsStore = defineStore('assets', () => {
     }
   }
 
-  const update = async (id: string, payload: UpdateAssetDto): Promise<Asset | null> => {
+  const update = async (organizationId: string, ledgerId: string, id: string, payload: UpdateAssetDto): Promise<Asset | null> => {
     loading.value = true
     error.value = null
     try {
-      const response = await assetsService.update(id, payload)
+      const response = await assetsService.update(organizationId, ledgerId, id, payload)
       const index = items.value.findIndex((asset) => asset.id === id)
       if (index !== -1) {
         items.value[index] = response
@@ -100,11 +104,11 @@ export const useAssetsStore = defineStore('assets', () => {
     }
   }
 
-  const delete_ = async (id: string): Promise<boolean> => {
+  const delete_ = async (organizationId: string, ledgerId: string, id: string): Promise<boolean> => {
     loading.value = true
     error.value = null
     try {
-      await assetsService.delete(id)
+      await assetsService.delete(organizationId, ledgerId, id)
       items.value = items.value.filter((asset) => asset.id !== id)
       pagination.value.total -= 1
       return true
