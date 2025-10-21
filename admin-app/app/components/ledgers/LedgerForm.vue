@@ -184,6 +184,7 @@ import type { Ledger, CreateLedgerDto, UpdateLedgerDto } from '@/types'
 interface Props {
   ledger?: Ledger | null
   isLoading?: boolean
+  isEditing?: boolean
 }
 
 interface Emits {
@@ -253,7 +254,8 @@ watch(
       initialForm.value = { ...form.value }
       metadataJson.value = JSON.stringify(form.value.metadata, null, 2)
     }
-  }
+  },
+  { immediate: false }
 )
 
 const validateOrganization = () => {

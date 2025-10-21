@@ -94,5 +94,6 @@ export const useLedgersStore = defineStore('ledgers', () => {
     getById,
     update,
     remove,
+    delete: remove,
   }
 })

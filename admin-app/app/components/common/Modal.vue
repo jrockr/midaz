@@ -53,7 +53,7 @@ onUnmounted(() => {
 <template>
   <teleport to="body">
     <transition name="modal">
-      <div v-if="modelValue || open" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div v-if="modelValue || open" class="fixed inset-0 z-50 flex items-center justify-center" v-bind="$attrs">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/50" @click="emit('update:modelValue', false)" />
 

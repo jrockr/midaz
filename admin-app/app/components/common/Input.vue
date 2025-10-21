@@ -19,6 +19,10 @@ const props = withDefaults(defineProps<Props>(), {
   required: false,
 })
 
+defineOptions({
+  inheritAttrs: false
+})
+
 const emit = defineEmits<{
   'update:modelValue': [value: string | number]
   blur: []
