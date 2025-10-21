@@ -91,7 +91,7 @@
     @apply flex items-center justify-between;
   }
 
-  .transition-all {
-    @apply transition-all duration-200 ease-in-out;
+  .transition-smooth {
+    @apply duration-200 ease-in-out;
   }
 }
