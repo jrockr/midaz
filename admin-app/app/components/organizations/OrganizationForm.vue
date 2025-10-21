@@ -2,6 +2,7 @@
 import { reactive, ref, computed, onMounted } from 'vue'
 import { Button, Input, Modal, Alert, Card } from '@/components'
 import type { Organization, CreateOrganizationDto, UpdateOrganizationDto, Address } from '@/types'
+import { useOrganizationsStore } from '@/stores'
 
 interface Props {
   organization?: Organization | null
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+const organizationsStore = useOrganizationsStore()
 
 const STORAGE_KEY = 'organization-form-draft'
 
@@ -50,41 +52,48 @@ const errors = reactive<Record<string, string | boolean>>({})
 const showMetadataEditor = ref(false)
 const metadataJson = ref('{}')
 const dirtyFields = ref<Set<string>>(new Set())
+const showParentSelector = ref(false)
 
 // Computed properties
 const hasErrors = computed(() => Object.keys(errors).length > 0)
 const isDirty = computed(() => dirtyFields.value.size > 0)
 const formTitle = computed(() => (props.isEditing ? 'Edit Organization' : 'Create Organization'))
+const parentOrganizations = computed(() => 
+  organizationsStore.items.filter(org => org.id !== props.organization?.id)
+)
+const selectedParentName = computed(() => 
+  organizationsStore.items.find(org => org.id === formData.parentOrganizationId)?.legalName || 'No parent selected'
+)
 
 // Initialize form with existing data or from localStorage
 onMounted(() => {
-  if (props.organization) {
-    formData.legalName = props.organization.legalName
-    formData.legalDocument = props.organization.legalDocument
-    formData.doingBusinessAs = props.organization.doingBusinessAs || ''
-    formData.parentOrganizationId = props.organization.parentOrganizationId || null
-    formData.address = props.organization.address || {
-      line1: '',
-      line2: '',
-      zipCode: '',
-      city: '',
-      state: '',
-      country: '',
-    }
-    formData.metadata = props.organization.metadata || {}
-    metadataJson.value = JSON.stringify(props.organization.metadata || {}, null, 2)
-  } else {
-    // Load from localStorage if not editing
-    try {
+  try {
+    if (props.organization) {
+      formData.legalName = props.organization.legalName
+      formData.legalDocument = props.organization.legalDocument
+      formData.doingBusinessAs = props.organization.doingBusinessAs || ''
+      formData.parentOrganizationId = props.organization.parentOrganizationId || null
+      formData.address = props.organization.address || {
+        line1: '',
+        line2: '',
+        zipCode: '',
+        city: '',
+        state: '',
+        country: '',
+      }
+      formData.metadata = props.organization.metadata || {}
+      metadataJson.value = JSON.stringify(props.organization.metadata || {}, null, 2)
+    } else {
+      // Load from localStorage if not editing
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
         Object.assign(formData, parsed)
         metadataJson.value = JSON.stringify(parsed.metadata || {}, null, 2)
       }
-    } catch (e) {
-      console.error('Failed to load form draft:', e)
     }
+  } catch (e) {
+    console.error('Failed to initialize form:', e)
   }
 })
 
@@ -282,6 +291,26 @@ const handleCancel = () => {
           class="w-full"
         />
       </div>
+
+      <!-- Parent Organization Field (Full Width) -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Parent Organization
+        </label>
+        <div class="flex gap-2">
+          <div class="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm flex items-center">
+            {{ selectedParentName }}
+          </div>
+          <Button 
+            type="button"
+            variant="secondary"
+            size="md"
+            @click="showParentSelector = true"
+          >
+            Select
+          </Button>
+        </div>
+      </div>
     </div>
 
     <!-- Address Section -->
@@ -427,6 +456,44 @@ const handleCancel = () => {
           </Button>
           <Button @click="updateMetadata" variant="primary">
             Update Metadata
+          </Button>
+        </div>
+      </template>
+    </Modal>
+
+    <!-- Parent Organization Selector Modal -->
+    <Modal v-model="showParentSelector" title="Select Parent Organization" size="lg">
+      <div class="space-y-4">
+        <div v-if="parentOrganizations.length === 0" class="text-center py-6">
+          <p class="text-gray-600">No parent organizations available</p>
+        </div>
+        <div v-else class="max-h-96 overflow-y-auto">
+          <div 
+            v-for="org in parentOrganizations" 
+            :key="org.id"
+            @click="formData.parentOrganizationId = org.id; showParentSelector = false; markDirty('parentOrganizationId')"
+            class="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors"
+            :class="{ 'bg-blue-50 border-blue-500': formData.parentOrganizationId === org.id }"
+          >
+            <div class="font-medium text-gray-900">{{ org.legalName }}</div>
+            <div class="text-sm text-gray-600">{{ org.doingBusinessAs || 'N/A' }}</div>
+            <div class="text-xs text-gray-500 mt-1">ID: {{ org.id }}</div>
+          </div>
+        </div>
+        <Button 
+          type="button"
+          variant="secondary"
+          class="w-full"
+          @click="() => { formData.parentOrganizationId = null; showParentSelector = false; markDirty('parentOrganizationId') }"
+        >
+          Clear Parent Organization
+        </Button>
+      </div>
+
+      <template #footer>
+        <div class="flex gap-3 justify-end">
+          <Button @click="showParentSelector = false" variant="secondary">
+            Cancel
           </Button>
         </div>
       </template>
