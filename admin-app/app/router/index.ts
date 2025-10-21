@@ -57,38 +57,86 @@ const routes: RouteRecordRaw[] = [
         name: 'AssetDetail',
         component: () => import('../pages/onboarding/assets/Detail.vue'),
       },
+      // Portfolios
       {
-        path: '/portfolios',
+        path: '/onboarding/portfolios',
         name: 'Portfolios',
         component: () => import('../pages/onboarding/portfolios/List.vue'),
       },
       {
-        path: '/portfolios/:id',
+        path: '/onboarding/portfolios/create',
+        name: 'CreatePortfolio',
+        component: () => import('../pages/onboarding/portfolios/Create.vue'),
+      },
+      {
+        path: '/onboarding/portfolios/:id',
         name: 'PortfolioDetail',
         component: () => import('../pages/onboarding/portfolios/Detail.vue'),
       },
       {
-        path: '/segments',
+        path: '/onboarding/portfolios/:id/edit',
+        name: 'EditPortfolio',
+        component: () => import('../pages/onboarding/portfolios/Edit.vue'),
+      },
+      // Segments
+      {
+        path: '/onboarding/segments',
         name: 'Segments',
         component: () => import('../pages/onboarding/segments/List.vue'),
       },
       {
-        path: '/segments/:id',
+        path: '/onboarding/segments/create',
+        name: 'CreateSegment',
+        component: () => import('../pages/onboarding/segments/Create.vue'),
+      },
+      {
+        path: '/onboarding/segments/:id',
         name: 'SegmentDetail',
         component: () => import('../pages/onboarding/segments/Detail.vue'),
       },
-      // Operations Routes
       {
-        path: '/operations',
-        name: 'Operations',
+        path: '/onboarding/segments/:id/edit',
+        name: 'EditSegment',
+        component: () => import('../pages/onboarding/segments/Edit.vue'),
+      },
+      // Operation Routes
+      {
+        path: '/operations/routes',
+        name: 'OperationRoutes',
         component: () => import('../pages/operations/routes/List.vue'),
       },
       {
-        path: '/operations/:id',
-        name: 'OperationDetail',
+        path: '/operations/routes/create',
+        name: 'CreateOperationRoute',
+        component: () => import('../pages/operations/routes/Create.vue'),
+      },
+      {
+        path: '/operations/routes/:id',
+        name: 'OperationRouteDetail',
         component: () => import('../pages/operations/routes/Detail.vue'),
       },
-      // Transactions Routes
+      {
+        path: '/operations/routes/:id/edit',
+        name: 'EditOperationRoute',
+        component: () => import('../pages/operations/routes/Edit.vue'),
+      },
+      // Transaction Routes
+      {
+        path: '/transactions/routes',
+        name: 'TransactionRoutes',
+        component: () => import('../pages/transactions/routes/List.vue'),
+      },
+      {
+        path: '/transactions/routes/create',
+        name: 'CreateTransactionRoute',
+        component: () => import('../pages/transactions/routes/Create.vue'),
+      },
+      {
+        path: '/transactions/routes/:id/edit',
+        name: 'EditTransactionRoute',
+        component: () => import('../pages/transactions/routes/Edit.vue'),
+      },
+      // Legacy transaction routes
       {
         path: '/transactions',
         name: 'Transactions',
