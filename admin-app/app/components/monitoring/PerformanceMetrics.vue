@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue"
 interface Metric {
   name: string
   value: number

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue"
 interface Error {
   id: string
   message: string
