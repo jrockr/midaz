@@ -1,7 +1,55 @@
 <template>
   <div class="space-y-4">
+    <!-- Organization & Ledger Selectors -->
+    <div class="bg-white rounded-lg shadow p-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Organization <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="orgSearchQuery"
+            type="text"
+            placeholder="Search organizations..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            v-model="selectedOrgId"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select an organization</option>
+            <option v-for="org in filteredOrganizations" :key="org.id" :value="org.id">
+              {{ org.name }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Ledger <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="ledgerSearchQuery"
+            type="text"
+            placeholder="Search ledgers..."
+            :disabled="!selectedOrgId"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          />
+          <select
+            v-model="selectedLedgerId"
+            :disabled="!selectedOrgId"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          >
+            <option value="">Select a ledger</option>
+            <option v-for="ledger in filteredLedgers" :key="ledger.id" :value="ledger.id">
+              {{ ledger.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Search and Filters -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div v-if="selectedOrgId && selectedLedgerId" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <input
         v-model="searchQuery"
         type="text"
@@ -41,6 +89,7 @@
 
     <!-- Table -->
     <SegmentsTable
+      v-if="selectedOrgId && selectedLedgerId"
       :items="filteredItems"
       :pagination="pagination"
       @view="$emit('view', $event)"
@@ -49,6 +98,9 @@
       @next-page="handleNextPage"
       @previous-page="handlePreviousPage"
     />
+    <div v-else class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+      <p>Please select an organization and ledger to view segments</p>
+    </div>
 
     <!-- Delete Modal -->
     <div
@@ -93,8 +145,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useSegmentsStore } from "@/stores/segments";
+import { useOrganizationsStore } from "@/stores/organizations";
+import { useLedgersStore } from "@/stores/ledgers";
 import SegmentsTable from "./SegmentsTable.vue";
 import type { Segment } from "@/types";
 
@@ -105,8 +159,14 @@ defineEmits<{
 }>();
 
 const segmentsStore = useSegmentsStore();
+const organizationsStore = useOrganizationsStore();
+const ledgersStore = useLedgersStore();
 
 const searchQuery = ref("");
+const orgSearchQuery = ref("");
+const ledgerSearchQuery = ref("");
+const selectedOrgId = ref("");
+const selectedLedgerId = ref("");
 const statusFilter = ref("");
 const pageLimit = ref(10);
 const currentPage = ref(1);
@@ -118,6 +178,22 @@ const toast = ref({
   show: false,
   message: "",
   type: "success" as "success" | "error",
+});
+
+const filteredOrganizations = computed(() => {
+  if (!orgSearchQuery.value) return organizationsStore.items;
+  const query = orgSearchQuery.value.toLowerCase();
+  return organizationsStore.items.filter(org => 
+    org.name.toLowerCase().includes(query) || org.id.toLowerCase().includes(query)
+  );
+});
+
+const filteredLedgers = computed(() => {
+  if (!ledgerSearchQuery.value) return ledgersStore.items;
+  const query = ledgerSearchQuery.value.toLowerCase();
+  return ledgersStore.items.filter(ledger => 
+    ledger.name.toLowerCase().includes(query) || ledger.id.toLowerCase().includes(query)
+  );
 });
 
 const pagination = computed(() => ({
@@ -170,8 +246,14 @@ const handleDelete = async () => {
 };
 
 const loadSegments = async () => {
+  if (!selectedOrgId.value || !selectedLedgerId.value) {
+    showToast("Please select organization and ledger first", "error");
+    return;
+  }
   try {
     await segmentsStore.fetchAll({
+      organizationId: selectedOrgId.value,
+      ledgerId: selectedLedgerId.value,
       limit: Number(pageLimit.value),
       page: currentPage.value,
     });
@@ -187,7 +269,20 @@ const showToast = (message: string, type: "success" | "error" = "success") => {
   }, 3000);
 };
 
+watch(selectedOrgId, async (newOrgId) => {
+  if (newOrgId) {
+    selectedLedgerId.value = "";
+    await ledgersStore.fetchAll({ organizationId: newOrgId, limit: 100 });
+  }
+});
+
+watch(selectedLedgerId, (newLedgerId) => {
+  if (newLedgerId && selectedOrgId.value) {
+    loadSegments();
+  }
+});
+
 onMounted(() => {
-  loadSegments();
+  organizationsStore.fetchAll({ limit: 100 });
 });
 </script>
