@@ -409,12 +409,18 @@ const handleSubmit = () => {
 
   const payload: CreateAccountDto | UpdateAccountDto = {
     alias: form.value.alias,
-    accountName: form.value.accountName,
-    accountNumber: form.value.accountNumber || undefined,
+    name: form.value.accountName,
     type: form.value.type as any,
-    status: form.value.status,
-    externalCode: form.value.externalCode || undefined,
+    assetCode: form.value.assetId,
+    status: { code: form.value.status },
     metadata: form.value.metadata
+  }
+
+  if (form.value.portfolioId) {
+    (payload as any).portfolioId = form.value.portfolioId
+  }
+  if (form.value.segmentId) {
+    (payload as any).segmentId = form.value.segmentId
   }
 
   const emit = defineEmits<Emits>()[0]

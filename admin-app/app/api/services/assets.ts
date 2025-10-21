@@ -9,13 +9,13 @@ export const assetsService = {
   /**
    * List all assets with pagination and filtering
    */
-  async list(params?: {
+  async list(organizationId: string, ledgerId: string, params?: {
     limit?: number
     offset?: number
     search?: string
   }): Promise<ListResponse<Asset>> {
     try {
-      const { data } = await onboardingClient.get('/v1/assets', { params })
+      const { data } = await onboardingClient.get(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/assets`, { params })
       return data
     } catch (error) {
       throw error
@@ -25,9 +25,9 @@ export const assetsService = {
   /**
    * Create a new asset
    */
-  async create(payload: CreateAssetDto): Promise<Asset> {
+  async create(organizationId: string, ledgerId: string, payload: CreateAssetDto): Promise<Asset> {
     try {
-      const { data } = await onboardingClient.post('/v1/assets', payload)
+      const { data } = await onboardingClient.post(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/assets`, payload)
       return data.data || data
     } catch (error) {
       throw error
@@ -37,9 +37,9 @@ export const assetsService = {
   /**
    * Get a single asset by ID
    */
-  async getById(id: string): Promise<Asset> {
+  async getById(organizationId: string, ledgerId: string, id: string): Promise<Asset> {
     try {
-      const { data } = await onboardingClient.get(`/v1/assets/${id}`)
+      const { data } = await onboardingClient.get(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/assets/${id}`)
       return data.data || data
     } catch (error) {
       throw error
@@ -49,9 +49,9 @@ export const assetsService = {
   /**
    * Update an existing asset
    */
-  async update(id: string, payload: UpdateAssetDto): Promise<Asset> {
+  async update(organizationId: string, ledgerId: string, id: string, payload: UpdateAssetDto): Promise<Asset> {
     try {
-      const { data } = await onboardingClient.patch(`/v1/assets/${id}`, payload)
+      const { data } = await onboardingClient.patch(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/assets/${id}`, payload)
       return data.data || data
     } catch (error) {
       throw error
@@ -61,9 +61,9 @@ export const assetsService = {
   /**
    * Delete an asset
    */
-  async delete(id: string): Promise<void> {
+  async delete(organizationId: string, ledgerId: string, id: string): Promise<void> {
     try {
-      await onboardingClient.delete(`/v1/assets/${id}`)
+      await onboardingClient.delete(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/assets/${id}`)
     } catch (error) {
       throw error
     }
@@ -72,9 +72,9 @@ export const assetsService = {
   /**
    * Get total count of assets
    */
-  async getCount(): Promise<number> {
+  async getCount(organizationId: string, ledgerId: string): Promise<number> {
     try {
-      const { headers } = await onboardingClient.head('/v1/assets/metrics/count')
+      const { headers } = await onboardingClient.head(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/assets/metrics/count`)
       return parseInt(headers['x-total-count'] || '0')
     } catch (error) {
       throw error

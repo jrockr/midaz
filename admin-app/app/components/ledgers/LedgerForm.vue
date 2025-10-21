@@ -292,8 +292,12 @@ const handleSubmit = async () => {
 
   const payload: CreateLedgerDto | UpdateLedgerDto = {
     name: form.value.name,
-    status: form.value.status,
+    status: { code: form.value.status },
     metadata: form.value.metadata
+  }
+
+  if (!isEditMode.value && form.value.organizationId) {
+    (payload as any).organizationId = form.value.organizationId
   }
 
   emit('submit', payload)

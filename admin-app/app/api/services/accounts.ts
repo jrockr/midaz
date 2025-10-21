@@ -9,14 +9,13 @@ export const accountsService = {
   /**
    * List all accounts with pagination and filtering
    */
-  async list(params?: {
+  async list(organizationId: string, ledgerId: string, params?: {
     limit?: number
     offset?: number
     search?: string
-    ledgerId?: string
   }): Promise<ListResponse<Account>> {
     try {
-      const { data } = await onboardingClient.get('/v1/accounts', { params })
+      const { data } = await onboardingClient.get(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts`, { params })
       return data
     } catch (error) {
       throw error
@@ -26,9 +25,9 @@ export const accountsService = {
   /**
    * Create a new account
    */
-  async create(payload: CreateAccountDto): Promise<Account> {
+  async create(organizationId: string, ledgerId: string, payload: CreateAccountDto): Promise<Account> {
     try {
-      const { data } = await onboardingClient.post('/v1/accounts', payload)
+      const { data } = await onboardingClient.post(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts`, payload)
       return data.data || data
     } catch (error) {
       throw error
@@ -38,9 +37,21 @@ export const accountsService = {
   /**
    * Get a single account by ID
    */
-  async getById(id: string): Promise<Account> {
+  async getById(organizationId: string, ledgerId: string, id: string): Promise<Account> {
     try {
-      const { data } = await onboardingClient.get(`/v1/accounts/${id}`)
+      const { data } = await onboardingClient.get(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts/${id}`)
+      return data.data || data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Get account by alias
+   */
+  async getByAlias(organizationId: string, ledgerId: string, alias: string): Promise<Account> {
+    try {
+      const { data } = await onboardingClient.get(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts/alias/${alias}`)
       return data.data || data
     } catch (error) {
       throw error
@@ -50,9 +61,9 @@ export const accountsService = {
   /**
    * Update an existing account
    */
-  async update(id: string, payload: UpdateAccountDto): Promise<Account> {
+  async update(organizationId: string, ledgerId: string, id: string, payload: UpdateAccountDto): Promise<Account> {
     try {
-      const { data } = await onboardingClient.patch(`/v1/accounts/${id}`, payload)
+      const { data } = await onboardingClient.patch(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts/${id}`, payload)
       return data.data || data
     } catch (error) {
       throw error
@@ -62,21 +73,9 @@ export const accountsService = {
   /**
    * Delete an account
    */
-  async delete(id: string): Promise<void> {
+  async delete(organizationId: string, ledgerId: string, id: string): Promise<void> {
     try {
-      await onboardingClient.delete(`/v1/accounts/${id}`)
-    } catch (error) {
-      throw error
-    }
-  },
-
-  /**
-   * Get account balance
-   */
-  async getBalance(id: string): Promise<any> {
-    try {
-      const { data } = await onboardingClient.get(`/v1/accounts/${id}/balance`)
-      return data.data || data
+      await onboardingClient.delete(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts/${id}`)
     } catch (error) {
       throw error
     }
@@ -85,9 +84,9 @@ export const accountsService = {
   /**
    * Get total count of accounts
    */
-  async getCount(): Promise<number> {
+  async getCount(organizationId: string, ledgerId: string): Promise<number> {
     try {
-      const { headers } = await onboardingClient.head('/v1/accounts/metrics/count')
+      const { headers } = await onboardingClient.head(`/v1/organizations/${organizationId}/ledgers/${ledgerId}/accounts/metrics/count`)
       return parseInt(headers['x-total-count'] || '0')
     } catch (error) {
       throw error

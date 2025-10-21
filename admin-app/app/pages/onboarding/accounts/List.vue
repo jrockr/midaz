@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, Modal, Input, Alert, Card, Breadcrumb } from '@/components'
 import { AccountForm, AccountsTable } from '@/components/accounts'
-import { useAccountsStore, useLedgersStore, useUIStore } from '@/stores'
+import { useAccountsStore, useLedgersStore, useUIStore, useOrganizationsStore } from '@/stores'
 import type { Account, CreateAccountDto } from '@/types'
 
 const router = useRouter()
 const accountsStore = useAccountsStore()
 const ledgersStore = useLedgersStore()
 const uiStore = useUIStore()
+const organizationsStore = useOrganizationsStore()
 
 const showCreateModal = ref(false)
 const showDeleteConfirm = ref(false)
 const searchQuery = ref('')
+const orgSearchQuery = ref('')
+const ledgerSearchQuery = ref('')
+const selectedOrgId = ref('')
+const selectedLedgerId = ref('')
 const filterStatus = ref<'ACTIVE' | 'INACTIVE' | ''>('')
-const filterLedger = ref<string>('')
 const filterType = ref<string>('')
 const sortBy = ref('createdAt')
 const sortDir = ref<'asc' | 'desc'>('desc')
@@ -75,14 +79,50 @@ const paginatedItems = computed(() => {
   return filteredItems.value.slice(start, end)
 })
 
+const filteredOrganizations = computed(() => {
+  if (!orgSearchQuery.value) return organizationsStore.items
+  const query = orgSearchQuery.value.toLowerCase()
+  return organizationsStore.items.filter(org => 
+    org.name.toLowerCase().includes(query) || org.id.toLowerCase().includes(query)
+  )
+})
+
+const filteredLedgers = computed(() => {
+  if (!ledgerSearchQuery.value) return ledgersStore.items
+  const query = ledgerSearchQuery.value.toLowerCase()
+  return ledgersStore.items.filter(ledger => 
+    ledger.name.toLowerCase().includes(query) || ledger.id.toLowerCase().includes(query)
+  )
+})
+
 onMounted(() => {
-  loadAccounts()
-  ledgersStore.fetch({ limit: 100 })
+  organizationsStore.fetch({ limit: 100 })
+})
+
+watch(selectedOrgId, async (newOrgId) => {
+  if (newOrgId) {
+    selectedLedgerId.value = ''
+    await ledgersStore.fetch({ organizationId: newOrgId, limit: 100 })
+  }
+})
+
+watch(selectedLedgerId, (newLedgerId) => {
+  if (newLedgerId && selectedOrgId.value) {
+    loadAccounts()
+  }
 })
 
 const loadAccounts = async () => {
+  if (!selectedOrgId.value || !selectedLedgerId.value) {
+    uiStore.showToast('Please select organization and ledger first', 'warning')
+    return
+  }
   try {
-    await accountsStore.fetch({ limit: 100 })
+    await accountsStore.fetch({ 
+      organizationId: selectedOrgId.value, 
+      ledgerId: selectedLedgerId.value, 
+      limit: 100 
+    })
   } catch (error) {
     console.error('Failed to load accounts:', error)
     uiStore.showToast('Failed to load accounts', 'error')
@@ -177,9 +217,57 @@ const handlePaginate = (page: number) => {
         </Button>
       </div>
 
-      <!-- Search and Filters -->
+      <!-- Organization & Ledger Selectors -->
       <Card class="p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Organization <span class="text-red-500">*</span>
+            </label>
+            <Input
+              v-model="orgSearchQuery"
+              type="text"
+              placeholder="Search organizations..."
+              class="mb-2"
+            />
+            <select
+              v-model="selectedOrgId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select an organization</option>
+              <option v-for="org in filteredOrganizations" :key="org.id" :value="org.id">
+                {{ org.name }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Ledger <span class="text-red-500">*</span>
+            </label>
+            <Input
+              v-model="ledgerSearchQuery"
+              type="text"
+              placeholder="Search ledgers..."
+              class="mb-2"
+              :disabled="!selectedOrgId"
+            />
+            <select
+              v-model="selectedLedgerId"
+              :disabled="!selectedOrgId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            >
+              <option value="">Select a ledger</option>
+              <option v-for="ledger in filteredLedgers" :key="ledger.id" :value="ledger.id">
+                {{ ledger.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
+      <!-- Search and Filters -->
+      <Card v-if="selectedOrgId && selectedLedgerId" class="p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             v-model="searchQuery"
             type="text"
@@ -192,15 +280,6 @@ const handlePaginate = (page: number) => {
             <option value="">All Status</option>
             <option value="ACTIVE">Active</option>
             <option value="INACTIVE">Inactive</option>
-          </select>
-          <select
-            v-model="filterLedger"
-            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Ledgers</option>
-            <option v-for="ledger in ledgersStore.items" :key="ledger.id" :value="ledger.id">
-              {{ ledger.name }}
-            </option>
           </select>
           <select
             v-model="filterType"
@@ -226,7 +305,7 @@ const handlePaginate = (page: number) => {
       </Alert>
 
       <!-- Table -->
-      <Card class="overflow-hidden">
+      <Card v-if="selectedOrgId && selectedLedgerId" class="overflow-hidden">
         <AccountsTable
           :items="paginatedItems"
           :loading="accountsStore.loading"
@@ -241,6 +320,9 @@ const handlePaginate = (page: number) => {
           @edit="editAccount"
           @delete="confirmDelete"
         />
+      </Card>
+      <Card v-else class="p-8 text-center text-gray-500">
+        <p>Please select an organization and ledger to view accounts</p>
       </Card>
     </div>
 

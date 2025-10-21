@@ -301,7 +301,7 @@ const handleSubmit = async () => {
     code: form.value.code,
     type: form.value.type,
     decimals: form.value.decimals,
-    status: form.value.status,
+    status: { code: form.value.status },
     metadata: form.value.metadata
   }
 
