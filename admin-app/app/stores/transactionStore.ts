@@ -115,15 +115,137 @@ export const useTransactionStore = defineStore('transaction', () => {
     }
   }
 
+  // Approval operations
+  const approveTransaction = async (id: string, data: any) => {
+    try {
+      loading.value = true
+      error.value = null
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      const idx = transactions.value.findIndex(t => t.id === id)
+      if (idx === -1) throw new Error('Transaction not found')
+      
+      transactions.value[idx] = {
+        ...transactions.value[idx],
+        status: 'PROCESSING',
+        updatedAt: new Date().toISOString()
+      }
+      return transactions.value[idx]
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to approve transaction'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const rejectTransaction = async (id: string, data: any) => {
+    try {
+      loading.value = true
+      error.value = null
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      const idx = transactions.value.findIndex(t => t.id === id)
+      if (idx === -1) throw new Error('Transaction not found')
+      
+      transactions.value[idx] = {
+        ...transactions.value[idx],
+        status: 'FAILED',
+        updatedAt: new Date().toISOString()
+      }
+      return transactions.value[idx]
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to reject transaction'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Batch operations
+  const batches = ref<any[]>([])
+
+  const createBatch = async (formData: FormData) => {
+    try {
+      loading.value = true
+      error.value = null
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      const batch = {
+        id: `BATCH-${Date.now()}`,
+        name: formData.get('name') || 'Batch Upload',
+        status: 'VALIDATING',
+        totalCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        createdAt: new Date().toISOString()
+      }
+      
+      batches.value.push(batch)
+      return batch
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to create batch'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const retryBatch = async (id: string) => {
+    try {
+      loading.value = true
+      error.value = null
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      const idx = batches.value.findIndex(b => b.id === id)
+      if (idx === -1) throw new Error('Batch not found')
+      
+      batches.value[idx] = {
+        ...batches.value[idx],
+        status: 'PROCESSING'
+      }
+      return batches.value[idx]
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to retry batch'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const cancelBatch = async (id: string) => {
+    try {
+      loading.value = true
+      error.value = null
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      const idx = batches.value.findIndex(b => b.id === id)
+      if (idx === -1) throw new Error('Batch not found')
+      
+      batches.value[idx] = {
+        ...batches.value[idx],
+        status: 'CANCELLED'
+      }
+      return batches.value[idx]
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to cancel batch'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // State
     transactions,
+    batches,
     loading,
     error,
 
     // Computed
     transactionCount: computed(() => transactions.value.length),
     pendingTransactions: computed(() => transactions.value.filter(t => t.status === 'PENDING')),
+    pendingApprovals: computed(() => transactions.value.filter(t => t.status === 'PENDING')),
     completedTransactions: computed(() => transactions.value.filter(t => t.status === 'COMPLETED')),
 
     // Methods
@@ -131,6 +253,11 @@ export const useTransactionStore = defineStore('transaction', () => {
     createTransaction,
     getTransaction,
     updateTransaction,
-    deleteTransaction
+    deleteTransaction,
+    approveTransaction,
+    rejectTransaction,
+    createBatch,
+    retryBatch,
+    cancelBatch
   }
 })

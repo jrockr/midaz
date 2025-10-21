@@ -1,56 +1,29 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Button, Card, Breadcrumb } from '@/components'
+import { useAnalyticsStore } from '@/stores'
+
+const analyticsStore = useAnalyticsStore()
 
 const dateRange = ref({
   startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
   endDate: new Date().toISOString().split('T')[0]
 })
 
-const financialMetrics = ref({
-  totalVolume: 2450000,
-  totalTransactions: 15420,
-  averageTransaction: 159.7,
-  successRate: 99.87
+onMounted(async () => {
+  await analyticsStore.fetchAnalytics(dateRange.value.startDate, dateRange.value.endDate)
 })
-
-const topAssets = ref([
-  { name: 'USD', volume: 1200000, percentage: 49 },
-  { name: 'EUR', volume: 680000, percentage: 28 },
-  { name: 'GBP', volume: 380000, percentage: 15 },
-  { name: 'JPY', volume: 190000, percentage: 8 }
-])
-
-const trendData = ref({
-  labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-  volume: [550000, 620000, 680000, 600000],
-  transactions: [3800, 4200, 4100, 3320]
-})
-
-const isLoading = ref(false)
-
-onMounted(() => {
-  loadAnalytics()
-})
-
-const loadAnalytics = async () => {
-  isLoading.value = true
-  try {
-    // API call would go here
-    await new Promise(resolve => setTimeout(resolve, 500))
-  } finally {
-    isLoading.value = false
-  }
-}
 
 const handleExport = () => {
-  // Export logic would go here
-  console.log('Exporting analytics...')
+  analyticsStore.exportData('csv')
 }
 
 const handleGenerateReport = () => {
-  // Report generation logic would go here
-  console.log('Generating report...')
+  analyticsStore.generateReport({ startDate: dateRange.value.startDate, endDate: dateRange.value.endDate })
+}
+
+const loadAnalytics = async () => {
+  await analyticsStore.fetchAnalytics(dateRange.value.startDate, dateRange.value.endDate)
 }
 </script>
 

@@ -9,3 +9,8 @@ export { useOperationsStore } from './operations'
 export { useBalancesStore } from './balances'
 export { useAssetRatesStore } from './asset-rates'
 export { useUIStore } from './ui'
+export { useTransactionStore } from './transactionStore'
+export { useMonitoringStore } from './monitoring'
+export { useAnalyticsStore } from './analytics'
+export { useSearchStore, useBalanceStore } from './search'
+
