@@ -18,3 +18,7 @@ export { default as TopBar } from './layout/TopBar.vue'
 
 // Organizations Module
 export * from './organizations'
+
+// Balances Module
+export * from './balances'
+

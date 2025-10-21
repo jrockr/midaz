@@ -188,13 +188,23 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: '/balances',
-        name: 'Balances',
-        component: () => import('../pages/transactions/balances/List.vue'),
+        name: 'AllBalances',
+        component: () => import('../pages/balances/AllList.vue'),
+      },
+      {
+        path: '/balances/:balanceId',
+        name: 'BalanceDetail',
+        component: () => import('../pages/balances/Detail.vue'),
       },
       {
         path: '/asset-rates',
         name: 'AssetRates',
         component: () => import('../pages/transactions/asset-rates/List.vue'),
+      },
+      {
+        path: '/onboarding/organizations/:orgId/ledgers/:ledgerId/accounts/:accountId/balances',
+        name: 'AccountBalances',
+        component: () => import('../pages/balances/List.vue'),
       },
     ],
   },
