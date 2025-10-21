@@ -57,7 +57,11 @@ const routes: RouteRecordRaw[] = [
         name: 'AssetDetail',
         component: () => import('../pages/onboarding/assets/Detail.vue'),
       },
-      // Portfolios
+      // Onboarding Root
+      {
+        path: '/onboarding',
+        redirect: '/onboarding/organizations',
+      },
       {
         path: '/onboarding/portfolios',
         name: 'Portfolios',
