@@ -11,8 +11,9 @@ A comprehensive Vue.js 3 + TypeScript admin dashboard for the Midaz Ledger Syste
 - **State Management**: Pinia (10 stores)
 - **API Client**: Axios with interceptors
 - **Testing**: Vitest + Playwright
-- **Status**: 🟢 Phase 1 - 85% Complete (23/27 tasks)
+- **Status**: 🟡 Phase 2 - Organizations & Ledgers (75/107 - 70% Complete)
 - **Start Date**: October 21, 2025
+- **Last Updated**: October 21, 2025 (Phase 2 started)
 - **Est. MVP**: December 9, 2025 (8 weeks)
 
 ---
