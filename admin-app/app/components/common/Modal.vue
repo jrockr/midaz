@@ -2,19 +2,23 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 
 interface Props {
+  modelValue?: boolean
   open?: boolean
   title?: string
   size?: 'sm' | 'md' | 'lg'
   closeButton?: boolean
+  type?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: false,
   open: false,
   closeButton: true,
   size: 'md',
 })
 
 const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
   close: []
   confirm: []
 }>()
@@ -50,9 +54,9 @@ onUnmounted(() => {
 <template>
   <teleport to="body">
     <transition name="modal">
-      <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div v-if="modelValue || open" class="fixed inset-0 z-50 flex items-center justify-center">
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/50" @click="emit('close')" />
+        <div class="absolute inset-0 bg-black/50" @click="emit('update:modelValue', false)" />
 
         <!-- Modal -->
         <div :class="`relative bg-white rounded-lg shadow-lg ${sizeClasses} w-full mx-4 animate-in fade-in zoom-in`">
@@ -61,7 +65,7 @@ onUnmounted(() => {
             <h2 v-if="title" class="text-lg font-semibold text-gray-900">{{ title }}</h2>
             <button
               v-if="closeButton"
-              @click="emit('close')"
+              @click="emit('update:modelValue', false)"
               class="text-gray-400 hover:text-gray-600 focus:outline-none"
             >
               <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

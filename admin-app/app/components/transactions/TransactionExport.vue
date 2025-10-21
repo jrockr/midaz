@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 const formats = ['CSV', 'JSON', 'PDF', 'Excel']
 const selectedFormat = ref('CSV')
-
-const ref = ref
 
 const handleExport = () => {
   console.log('Exporting as', selectedFormat.value)
