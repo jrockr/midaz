@@ -14,7 +14,7 @@ interface Emits {
   cancel: () => void
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   isLoading: false,
   isEditing: false,
 })
@@ -45,17 +45,17 @@ const dirtyFields = ref<Set<string>>(new Set())
 // Computed properties
 const hasErrors = computed(() => Object.keys(errors).length > 0)
 const isDirty = computed(() => dirtyFields.value.size > 0)
-const formTitle = computed(() => (isEditing ? 'Edit Organization' : 'Create Organization'))
+const formTitle = computed(() => (props.isEditing ? 'Edit Organization' : 'Create Organization'))
 
 // Initialize form with existing data or from localStorage
 onMounted(() => {
-  if (organization) {
-    formData.name = organization.name
-    formData.code = organization.code || ''
-    formData.description = organization.description || ''
-    formData.parentId = organization.parentId || null
-    formData.metadata = organization.metadata || {}
-    metadataJson.value = JSON.stringify(organization.metadata || {}, null, 2)
+  if (props.organization) {
+    formData.name = props.organization.name
+    formData.code = props.organization.code || ''
+    formData.description = props.organization.description || ''
+    formData.parentId = props.organization.parentId || null
+    formData.metadata = props.organization.metadata || {}
+    metadataJson.value = JSON.stringify(props.organization.metadata || {}, null, 2)
   } else {
     // Load from localStorage if not editing
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -123,7 +123,7 @@ const markDirty = (field: string) => {
 
 // localStorage management
 const saveToLocalStorage = () => {
-  if (!isEditing) {
+  if (!props.isEditing) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
   }
 }
@@ -136,13 +136,13 @@ const resetForm = () => {
   if (!isDirty.value) return
   if (confirm('Are you sure you want to discard your changes?')) {
     Object.assign(formData, {
-      name: organization?.name || '',
-      code: organization?.code || '',
-      description: organization?.description || '',
-      parentId: organization?.parentId || null,
-      metadata: organization?.metadata || {},
+      name: props.organization?.name || '',
+      code: props.organization?.code || '',
+      description: props.organization?.description || '',
+      parentId: props.organization?.parentId || null,
+      metadata: props.organization?.metadata || {},
     })
-    metadataJson.value = JSON.stringify(organization?.metadata || {}, null, 2)
+    metadataJson.value = JSON.stringify(props.organization?.metadata || {}, null, 2)
     dirtyFields.value.clear()
     Object.assign(errors, {})
     clearLocalStorage()
@@ -158,7 +158,7 @@ const handleSubmit = async () => {
     return
   }
 
-  const payload = isEditing
+  const payload = props.isEditing
     ? ({
         name: formData.name,
         code: formData.code,
@@ -213,7 +213,7 @@ const handleCancel = () => {
           v-model="formData.name"
           type="text"
           placeholder="e.g., Acme Corporation"
-          :error="!!errors.name"
+          :error="errors.name || ''"
           @update:modelValue="markDirty('name')"
           class="w-full"
         />
@@ -229,7 +229,7 @@ const handleCancel = () => {
           v-model="formData.code"
           type="text"
           placeholder="e.g., ACME"
-          :error="!!errors.code"
+          :error="errors.code || ''"
           @update:modelValue="markDirty('code')"
           class="w-full"
         />
@@ -336,7 +336,7 @@ const handleCancel = () => {
     </div>
 
     <!-- Dirty State Indicator -->
-    <div v-if="isDirty && !isEditing" class="text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
+    <div v-if="isDirty && !props.isEditing" class="text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
       💾 Form has unsaved changes (auto-saving to browser)
     </div>
   </form>
