@@ -31,6 +31,7 @@ const formData = reactive<{
   doingBusinessAs: string
   parentOrganizationId: string | null
   address: Address
+  status: { code: 'ACTIVE' | 'INACTIVE' }
   metadata: Record<string, unknown>
 }>({
   legalName: '',
@@ -45,6 +46,7 @@ const formData = reactive<{
     state: '',
     country: '',
   },
+  status: { code: 'ACTIVE' },
   metadata: {},
 })
 
@@ -81,6 +83,7 @@ onMounted(() => {
         state: '',
         country: '',
       }
+      formData.status = props.organization.status || { code: 'ACTIVE' }
       formData.metadata = props.organization.metadata || {}
       metadataJson.value = JSON.stringify(props.organization.metadata || {}, null, 2)
     } else {
@@ -180,6 +183,7 @@ const resetForm = () => {
         state: '',
         country: '',
       },
+      status: props.organization?.status || { code: 'ACTIVE' },
       metadata: props.organization?.metadata || {},
     })
     metadataJson.value = JSON.stringify(props.organization?.metadata || {}, null, 2)
@@ -205,6 +209,7 @@ const handleSubmit = async () => {
         doingBusinessAs: formData.doingBusinessAs,
         parentOrganizationId: formData.parentOrganizationId,
         address: formData.address,
+        status: formData.status,
         metadata: formData.metadata,
       } as UpdateOrganizationDto)
     : ({
@@ -213,6 +218,7 @@ const handleSubmit = async () => {
         doingBusinessAs: formData.doingBusinessAs,
         parentOrganizationId: formData.parentOrganizationId,
         address: formData.address,
+        status: formData.status,
         metadata: formData.metadata,
       } as CreateOrganizationDto)
 
@@ -310,6 +316,21 @@ const handleCancel = () => {
             Select
           </Button>
         </div>
+      </div>
+
+      <!-- Status Field -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Status <span class="text-red-500">*</span>
+        </label>
+        <select
+          v-model="formData.status.code"
+          @change="markDirty('status')"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
       </div>
     </div>
 

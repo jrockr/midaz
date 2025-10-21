@@ -201,7 +201,7 @@ const handlePaginate = (page: number) => {
         </Alert>
         <p class="text-gray-600">
           Are you sure you want to delete
-          <strong class="text-gray-900">{{ selectedForDelete?.name }}</strong>
+          <strong class="text-gray-900">{{ selectedForDelete?.legalName }}</strong>
           ?
         </p>
       </div>
