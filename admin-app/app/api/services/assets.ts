@@ -1,7 +1,19 @@
 import { onboardingClient } from '../client'
+import type { Asset, CreateAssetDto, UpdateAssetDto, ListResponse } from '../../types'
 
-export const UassetsService = {
-  async list(params?: any) {
+/**
+ * Assets API Service
+ * Handles all asset-related API calls
+ */
+export const assetsService = {
+  /**
+   * List all assets with pagination and filtering
+   */
+  async list(params?: {
+    limit?: number
+    offset?: number
+    search?: string
+  }): Promise<ListResponse<Asset>> {
     try {
       const { data } = await onboardingClient.get('/v1/assets', { params })
       return data
@@ -10,7 +22,10 @@ export const UassetsService = {
     }
   },
 
-  async create(payload: any) {
+  /**
+   * Create a new asset
+   */
+  async create(payload: CreateAssetDto): Promise<Asset> {
     try {
       const { data } = await onboardingClient.post('/v1/assets', payload)
       return data.data || data
@@ -19,7 +34,10 @@ export const UassetsService = {
     }
   },
 
-  async getById(id: string) {
+  /**
+   * Get a single asset by ID
+   */
+  async getById(id: string): Promise<Asset> {
     try {
       const { data } = await onboardingClient.get(`/v1/assets/${id}`)
       return data.data || data
@@ -28,7 +46,10 @@ export const UassetsService = {
     }
   },
 
-  async update(id: string, payload: any) {
+  /**
+   * Update an existing asset
+   */
+  async update(id: string, payload: UpdateAssetDto): Promise<Asset> {
     try {
       const { data } = await onboardingClient.patch(`/v1/assets/${id}`, payload)
       return data.data || data
@@ -37,9 +58,24 @@ export const UassetsService = {
     }
   },
 
-  async delete(id: string) {
+  /**
+   * Delete an asset
+   */
+  async delete(id: string): Promise<void> {
     try {
       await onboardingClient.delete(`/v1/assets/${id}`)
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Get total count of assets
+   */
+  async getCount(): Promise<number> {
+    try {
+      const { headers } = await onboardingClient.head('/v1/assets/metrics/count')
+      return parseInt(headers['x-total-count'] || '0')
     } catch (error) {
       throw error
     }
