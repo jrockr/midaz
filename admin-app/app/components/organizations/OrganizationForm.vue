@@ -50,7 +50,7 @@ const formData = reactive<{
   metadata: {},
 })
 
-const errors = reactive<Record<string, string | boolean>>({})
+const errors = reactive<Record<string, string>>({})
 const showMetadataEditor = ref(false)
 const metadataJson = ref('{}')
 const dirtyFields = ref<Set<string>>(new Set())
@@ -102,9 +102,9 @@ onMounted(() => {
 
 // Validation
 const validateForm = () => {
-  errors.legalName = ''
-  errors.legalDocument = ''
-  errors.address = ''
+  Object.keys(errors).forEach(key => {
+    delete errors[key]
+  })
 
   if (!formData.legalName?.trim()) {
     errors.legalName = 'Legal name is required'
