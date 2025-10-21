@@ -1,15 +1,53 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useTransactionStore } from '@/stores/transactionStore'
+import { useOrganizationsStore } from '@/stores/organizations'
+import { useLedgersStore } from '@/stores/ledgers'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useTransactionStore()
+const organizationsStore = useOrganizationsStore()
+const ledgersStore = useLedgersStore()
+
 const searchQuery = ref('')
+const orgSearchQuery = ref('')
+const ledgerSearchQuery = ref('')
+const selectedOrgId = ref('')
+const selectedLedgerId = ref('')
 const filterStatus = ref('')
 
+const filteredOrganizations = computed(() => {
+  if (!orgSearchQuery.value) return organizationsStore.items
+  const query = orgSearchQuery.value.toLowerCase()
+  return organizationsStore.items.filter(org => 
+    org.name.toLowerCase().includes(query) || org.id.toLowerCase().includes(query)
+  )
+})
+
+const filteredLedgers = computed(() => {
+  if (!ledgerSearchQuery.value) return ledgersStore.items
+  const query = ledgerSearchQuery.value.toLowerCase()
+  return ledgersStore.items.filter(ledger => 
+    ledger.name.toLowerCase().includes(query) || ledger.id.toLowerCase().includes(query)
+  )
+})
+
+watch(selectedOrgId, async (newOrgId) => {
+  if (newOrgId) {
+    selectedLedgerId.value = ''
+    await ledgersStore.fetchAll({ organizationId: newOrgId, limit: 100 })
+  }
+})
+
+watch(selectedLedgerId, async (newLedgerId) => {
+  if (newLedgerId && selectedOrgId.value) {
+    await store.fetchTransactions({ organizationId: selectedOrgId.value, ledgerId: newLedgerId })
+  }
+})
+
 onMounted(async () => {
-  await store.fetchTransactions()
+  await organizationsStore.fetchAll({ limit: 100 })
 })
 
 const filteredTransactions = computed(() => {
@@ -86,8 +124,56 @@ const formatAmount = (sources: any[]) => {
         </button>
       </div>
 
+      <!-- Organization & Ledger Selectors -->
+      <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Organization <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="orgSearchQuery"
+              type="text"
+              placeholder="Search organizations..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500"
+            />
+            <select
+              v-model="selectedOrgId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select an organization</option>
+              <option v-for="org in filteredOrganizations" :key="org.id" :value="org.id">
+                {{ org.name }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Ledger <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="ledgerSearchQuery"
+              type="text"
+              placeholder="Search ledgers..."
+              :disabled="!selectedOrgId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            />
+            <select
+              v-model="selectedLedgerId"
+              :disabled="!selectedOrgId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            >
+              <option value="">Select a ledger</option>
+              <option v-for="ledger in filteredLedgers" :key="ledger.id" :value="ledger.id">
+                {{ ledger.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- Filters -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div v-if="selectedOrgId && selectedLedgerId" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div>
           <input
             v-model="searchQuery"
@@ -112,7 +198,7 @@ const formatAmount = (sources: any[]) => {
       </div>
 
       <!-- Transactions Table -->
-      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div v-if="selectedOrgId && selectedLedgerId" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div v-if="filteredTransactions.length === 0" class="p-12 text-center">
           <div class="text-gray-500 text-lg mb-4">No transactions found</div>
           <button
@@ -173,8 +259,13 @@ const formatAmount = (sources: any[]) => {
         </table>
       </div>
 
+      <!-- Empty State -->
+      <div v-else class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <p class="text-gray-500 text-lg">Please select an organization and ledger to view transactions</p>
+      </div>
+
       <!-- Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+      <div v-if="selectedOrgId && selectedLedgerId" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
         <div class="bg-white rounded-lg border border-gray-200 p-6">
           <p class="text-sm text-gray-600 mb-2">Total Transactions</p>
           <p class="text-3xl font-bold text-gray-900">{{ store.transactionCount }}</p>

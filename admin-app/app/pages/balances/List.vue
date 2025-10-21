@@ -1,15 +1,53 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Button, Card, Input, Table, Modal, Alert, Breadcrumb } from '@/components'
 import { useBalanceStore } from '@/stores'
+import { useOrganizationsStore } from '@/stores/organizations'
+import { useLedgersStore } from '@/stores/ledgers'
 
 const route = useRoute()
 const balanceStore = useBalanceStore()
+const organizationsStore = useOrganizationsStore()
+const ledgersStore = useLedgersStore()
 
-const orgId = computed(() => route.params.orgId as string)
-const ledgerId = computed(() => route.params.ledgerId as string)
+const orgSearchQuery = ref('')
+const ledgerSearchQuery = ref('')
+const selectedOrgId = ref(route.params.orgId as string || '')
+const selectedLedgerId = ref(route.params.ledgerId as string || '')
+
+const orgId = computed(() => selectedOrgId.value)
+const ledgerId = computed(() => selectedLedgerId.value)
 const accountId = computed(() => route.params.accountId as string)
+
+const filteredOrganizations = computed(() => {
+  if (!orgSearchQuery.value) return organizationsStore.items
+  const query = orgSearchQuery.value.toLowerCase()
+  return organizationsStore.items.filter(org => 
+    org.name.toLowerCase().includes(query) || org.id.toLowerCase().includes(query)
+  )
+})
+
+const filteredLedgers = computed(() => {
+  if (!ledgerSearchQuery.value) return ledgersStore.items
+  const query = ledgerSearchQuery.value.toLowerCase()
+  return ledgersStore.items.filter(ledger => 
+    ledger.name.toLowerCase().includes(query) || ledger.id.toLowerCase().includes(query)
+  )
+})
+
+watch(selectedOrgId, async (newOrgId) => {
+  if (newOrgId) {
+    selectedLedgerId.value = ''
+    await ledgersStore.fetchAll({ organizationId: newOrgId, limit: 100 })
+  }
+})
+
+watch(selectedLedgerId, async (newLedgerId) => {
+  if (newLedgerId && selectedOrgId.value) {
+    await loadBalances()
+  }
+})
 
 const balances = ref<any[]>([])
 const filters = ref({
@@ -26,14 +64,25 @@ const showForm = ref(false)
 const selectedBalance = ref<any>(null)
 
 onMounted(async () => {
-  await loadBalances()
+  await organizationsStore.fetchAll({ limit: 100 })
+  if (selectedOrgId.value) {
+    await ledgersStore.fetchAll({ organizationId: selectedOrgId.value, limit: 100 })
+    if (selectedLedgerId.value) {
+      await loadBalances()
+    }
+  }
 })
 
 const loadBalances = async () => {
+  if (!selectedOrgId.value || !selectedLedgerId.value) {
+    error.value = 'Please select organization and ledger'
+    return
+  }
   isLoading.value = true
   error.value = null
   try {
-    // Simulated API call
+    // Simulated API call - replace with actual API call
+    // await balanceStore.fetchAll({ organizationId: selectedOrgId.value, ledgerId: selectedLedgerId.value })
     balances.value = [
       {
         id: 'BAL-001',
@@ -160,23 +209,65 @@ const formatCurrency = (value: number) => {
 <template>
   <div class="p-6">
     <Breadcrumb :items="[
-      { label: 'Organizations', route: '/onboarding/organizations' },
-      { label: orgId, route: `/onboarding/organizations/${orgId}` },
-      { label: 'Ledgers', route: `/onboarding/organizations/${orgId}/ledgers` },
-      { label: ledgerId },
-      { label: 'Accounts', route: `/onboarding/organizations/${orgId}/ledgers/${ledgerId}/accounts` },
-      { label: accountId },
       { label: 'Balances' }
     ]" />
 
     <div class="mt-6 flex items-center justify-between">
       <h1 class="text-3xl font-bold text-gray-900">Account Balances</h1>
-      <Button @click="openForm" variant="primary">+ Add Balance</Button>
+      <Button @click="openForm" variant="primary" :disabled="!selectedOrgId || !selectedLedgerId">+ Add Balance</Button>
     </div>
 
     <Alert v-if="error" type="error" class="mt-4">{{ error }}</Alert>
 
+    <!-- Organization & Ledger Selectors -->
     <Card class="mt-6 p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Organization <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="orgSearchQuery"
+            type="text"
+            placeholder="Search organizations..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            v-model="selectedOrgId"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select an organization</option>
+            <option v-for="org in filteredOrganizations" :key="org.id" :value="org.id">
+              {{ org.name }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Ledger <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="ledgerSearchQuery"
+            type="text"
+            placeholder="Search ledgers..."
+            :disabled="!selectedOrgId"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          />
+          <select
+            v-model="selectedLedgerId"
+            :disabled="!selectedOrgId"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          >
+            <option value="">Select a ledger</option>
+            <option v-for="ledger in filteredLedgers" :key="ledger.id" :value="ledger.id">
+              {{ ledger.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </Card>
+
+    <Card v-if="selectedOrgId && selectedLedgerId" class="mt-6 p-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
           <label class="text-sm font-medium text-gray-700">Search</label>
