@@ -304,7 +304,7 @@ const handleSubmit = () => {
     name: form.value.name,
     parentSegmentId: form.value.parentSegmentId || undefined,
     description: form.value.description,
-    status: form.value.status,
+    status: { code: form.value.status },
     metadata: form.value.metadata ? JSON.parse(form.value.metadata) : {},
   };
 

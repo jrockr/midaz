@@ -246,10 +246,11 @@ const handleSubmit = () => {
     organizationId: form.value.organizationId,
     name: form.value.name,
     description: form.value.description,
-    status: form.value.status,
+    status: { code: form.value.status },
     metadata: form.value.metadata ? JSON.parse(form.value.metadata) : {},
   };
 
+  const emit = defineEmits<Emits>()[0];
   emit("submit", formData);
 };
 
