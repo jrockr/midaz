@@ -22,3 +22,6 @@ export * from './organizations'
 // Balances Module
 export * from './balances'
 
+// Asset Rates Module
+export * from './asset-rates'
+
