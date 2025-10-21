@@ -27,7 +27,8 @@ const emit = defineEmits<{
 
 const inputClasses = computed(() => {
   const base = 'w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
-  if (props.error) {
+  const errorMsg = typeof props.error === 'string' ? props.error : ''
+  if (errorMsg) {
     return `${base} border-red-500 bg-red-50`
   }
   if (props.disabled) {
@@ -65,6 +66,6 @@ const inputClasses = computed(() => {
         <!-- Icon would be rendered here based on icon prop -->
       </svg>
     </div>
-    <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+    <p v-if="error && typeof error === 'string'" class="mt-1 text-sm text-red-500">{{ error }}</p>
   </div>
 </template>

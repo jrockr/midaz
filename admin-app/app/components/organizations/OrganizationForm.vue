@@ -58,11 +58,15 @@ onMounted(() => {
     metadataJson.value = JSON.stringify(props.organization.metadata || {}, null, 2)
   } else {
     // Load from localStorage if not editing
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      Object.assign(formData, parsed)
-      metadataJson.value = JSON.stringify(parsed.metadata || {}, null, 2)
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        Object.assign(formData, parsed)
+        metadataJson.value = JSON.stringify(parsed.metadata || {}, null, 2)
+      }
+    } catch (e) {
+      console.error('Failed to load form draft:', e)
     }
   }
 })

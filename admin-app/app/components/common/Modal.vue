@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
+defineOptions({
+  inheritAttrs: false,
+})
+
 interface Props {
   modelValue?: boolean
   open?: boolean
