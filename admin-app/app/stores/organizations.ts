@@ -26,10 +26,21 @@ export const useOrganizationsStore = defineStore('organizations', () => {
     error.value = null
     try {
       const response = await organizationsService.list(params)
-      items.value = response.data || []
+      // Handle different response structures
+      if (Array.isArray(response)) {
+        items.value = response
+      } else if (response.data) {
+        items.value = Array.isArray(response.data) ? response.data : [response.data]
+      } else if (response.items) {
+        items.value = response.items
+      } else {
+        items.value = []
+      }
+      
       if (response.pagination) {
         pagination.value = response.pagination
       }
+      console.log('Organizations loaded:', items.value.length)
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch organizations'
       error.value = errorMessage
@@ -38,6 +49,8 @@ export const useOrganizationsStore = defineStore('organizations', () => {
       loading.value = false
     }
   }
+
+  const fetchAll = fetch
 
   const create = async (payload: CreateOrganizationDto): Promise<Organization | null> => {
     loading.value = true
@@ -166,6 +179,7 @@ export const useOrganizationsStore = defineStore('organizations', () => {
 
     // Actions
     fetch,
+    fetchAll,
     create,
     getById,
     update,
