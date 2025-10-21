@@ -1,49 +1,54 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Table, Modal, Input, Alert, Spinner, Card, Breadcrumb, Skeleton } from '@/components'
-import { useOrganizationsStore } from '@/stores'
-import type { Organization } from '@/types'
+import { Button, Modal, Input, Alert, Card, Breadcrumb } from '@/components'
+import { OrganizationForm, OrganizationsTable } from '@/components/organizations'
+import { useOrganizationsStore, useUIStore } from '@/stores'
+import type { Organization, CreateOrganizationDto } from '@/types'
 
 const router = useRouter()
 const organizationsStore = useOrganizationsStore()
+const uiStore = useUIStore()
 
 const showCreateModal = ref(false)
 const showDeleteConfirm = ref(false)
 const searchQuery = ref('')
-const pageSize = ref(10)
 const currentPage = ref(1)
+const sortBy = ref('createdAt')
+const sortDir = ref<'asc' | 'desc'>('desc')
 const selectedForDelete = ref<Organization | null>(null)
 
-const formData = ref({
-  name: '',
-  status: 'active' as const,
-})
-
-const columns = [
-  { key: 'id', label: 'ID', width: '20%' },
-  { key: 'name', label: 'Name', width: '30%' },
-  { key: 'status', label: 'Status', width: '15%' },
-  { key: 'createdAt', label: 'Created', width: '20%' },
-  { key: 'actions', label: 'Actions', width: '15%' },
-]
+const pageSize = 10
 
 const filteredItems = computed(() => {
   if (!searchQuery.value) return organizationsStore.items
+  const query = searchQuery.value.toLowerCase()
   return organizationsStore.items.filter((org: Organization) =>
-    org.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    org.id.toLowerCase().includes(searchQuery.value.toLowerCase())
+    org.name.toLowerCase().includes(query) ||
+    org.id.toLowerCase().includes(query) ||
+    (org.code && org.code.toLowerCase().includes(query))
   )
 })
 
+const sortedItems = computed(() => {
+  const items = [...filteredItems.value]
+  items.sort((a, b) => {
+    const aVal = a[sortBy.value as keyof Organization] ?? ''
+    const bVal = b[sortBy.value as keyof Organization] ?? ''
+    const cmp = String(aVal).localeCompare(String(bVal))
+    return sortDir.value === 'asc' ? cmp : -cmp
+  })
+  return items
+})
+
 const paginatedItems = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredItems.value.slice(start, end)
+  const start = (currentPage.value - 1) * pageSize
+  const end = start + pageSize
+  return sortedItems.value.slice(start, end)
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredItems.value.length / pageSize.value)
+  return Math.ceil(sortedItems.value.length / pageSize)
 })
 
 onMounted(() => {
@@ -55,35 +60,20 @@ const loadOrganizations = async () => {
     await organizationsStore.fetch({ limit: 100 })
   } catch (error) {
     console.error('Failed to load organizations:', error)
+    uiStore.showToast('Failed to load organizations', 'error')
   }
 }
 
-const openCreateModal = () => {
-  formData.value = { name: '', status: 'active' }
-  showCreateModal.value = true
-}
-
-const closeCreateModal = () => {
-  showCreateModal.value = false
-  formData.value = { name: '', status: 'active' }
-}
-
-const handleCreate = async () => {
-  if (!formData.value.name.trim()) {
-    alert('Organization name is required')
-    return
-  }
-
+const handleCreateSubmit = async (formData: CreateOrganizationDto) => {
   try {
-    await organizationsStore.create({
-      name: formData.value.name,
-      status: formData.value.status,
-    })
-    closeCreateModal()
+    await organizationsStore.create(formData)
+    showCreateModal.value = false
+    currentPage.value = 1
     await loadOrganizations()
+    uiStore.showToast('Organization created successfully', 'success')
   } catch (error) {
     console.error('Failed to create organization:', error)
-    alert('Failed to create organization')
+    uiStore.showToast('Failed to create organization', 'error')
   }
 }
 
@@ -107,19 +97,25 @@ const handleDelete = async () => {
     await organizationsStore.remove(selectedForDelete.value.id)
     showDeleteConfirm.value = false
     selectedForDelete.value = null
+    if (paginatedItems.value.length === 1 && currentPage.value > 1) {
+      currentPage.value--
+    }
     await loadOrganizations()
+    uiStore.showToast('Organization deleted successfully', 'success')
   } catch (error) {
     console.error('Failed to delete organization:', error)
-    alert('Failed to delete organization')
+    uiStore.showToast('Failed to delete organization', 'error')
   }
 }
 
-const formatDate = (dateString: string) => {
-  try {
-    return new Date(dateString).toLocaleDateString()
-  } catch {
-    return dateString
-  }
+const handleSort = (column: string, direction: 'asc' | 'desc') => {
+  sortBy.value = column
+  sortDir.value = direction
+  currentPage.value = 1
+}
+
+const handlePaginate = (page: number) => {
+  currentPage.value = page
 }
 </script>
 
@@ -135,9 +131,9 @@ const formatDate = (dateString: string) => {
       <div class="flex items-center justify-between mb-8">
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Organizations</h1>
-          <p class="text-gray-600 mt-2">Manage your organizations</p>
+          <p class="text-gray-600 mt-2">Manage your organizations and their settings</p>
         </div>
-        <Button @click="openCreateModal" variant="primary" size="md">
+        <Button @click="showCreateModal = true" variant="primary" size="md">
           <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -151,7 +147,7 @@ const formatDate = (dateString: string) => {
           <Input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by name or ID..."
+            placeholder="Search by name, ID, or code..."
             class="flex-1"
           />
           <Button @click="loadOrganizations" variant="secondary">
@@ -168,162 +164,57 @@ const formatDate = (dateString: string) => {
         {{ organizationsStore.error }}
       </Alert>
 
-      <!-- Loading State with Skeleton -->
-      <div v-if="organizationsStore.loading && organizationsStore.items.length === 0" class="mb-6">
-        <Card class="p-6">
-          <Skeleton type="table-row" :count="5" />
-        </Card>
-      </div>
-
-      <!-- Table -->
-      <Card v-else class="overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  v-for="column in columns"
-                  :key="column.key"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  :style="{ width: column.width }"
-                >
-                  {{ column.label }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-if="paginatedItems.length === 0">
-                <td :colspan="columns.length" class="px-6 py-8 text-center text-gray-500">
-                  No organizations found
-                </td>
-              </tr>
-              <tr v-for="org in paginatedItems" :key="org.id" class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {{ org.id.substring(0, 8) }}...
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {{ org.name }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <span
-                    :class="[
-                      'px-2 py-1 rounded-full text-xs font-semibold',
-                      org.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800',
-                    ]"
-                  >
-                    {{ org.status }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {{ formatDate(org.createdAt) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <div class="flex gap-2">
-                    <button
-                      @click="viewDetail(org)"
-                      class="text-blue-600 hover:text-blue-900 font-medium"
-                    >
-                      View
-                    </button>
-                    <button
-                      @click="editOrganization(org)"
-                      class="text-yellow-600 hover:text-yellow-900 font-medium"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      @click="confirmDelete(org)"
-                      class="text-red-600 hover:text-red-900 font-medium"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            Showing {{ filteredItems.length ? (currentPage - 1) * pageSize + 1 : 0 }} to
-            {{ Math.min(currentPage * pageSize, filteredItems.length) }} of {{ filteredItems.length }}
-          </div>
-          <div class="flex gap-2">
-            <Button
-              :disabled="currentPage === 1"
-              @click="currentPage--"
-              variant="secondary"
-              size="sm"
-            >
-              Previous
-            </Button>
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-600">Page {{ currentPage }} of {{ totalPages }}</span>
-            </div>
-            <Button
-              :disabled="currentPage === totalPages"
-              @click="currentPage++"
-              variant="secondary"
-              size="sm"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      <!-- Organizations Table -->
+      <Card class="overflow-hidden">
+        <OrganizationsTable
+          :organizations="paginatedItems"
+          :loading="organizationsStore.loading"
+          :sort-by="sortBy"
+          :sort-dir="sortDir"
+          :page="currentPage"
+          :page-size="pageSize"
+          :total="sortedItems.length"
+          @sort="handleSort"
+          @paginate="handlePaginate"
+          @view="viewDetail"
+          @edit="editOrganization"
+          @delete="confirmDelete"
+        />
       </Card>
     </div>
 
-    <!-- Create Modal -->
+    <!-- Create Organization Modal -->
     <Modal v-model="showCreateModal" title="Create Organization">
-      <div class="space-y-4">
-        <Input
-          v-model="formData.name"
-          label="Organization Name"
-          type="text"
-          placeholder="Enter organization name"
-          required
-        />
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <select
-            v-model="formData.status"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex gap-3 justify-end">
-          <Button @click="closeCreateModal" variant="secondary">Cancel</Button>
-          <Button @click="handleCreate" variant="primary" :disabled="organizationsStore.loading">
-            {{ organizationsStore.loading ? 'Creating...' : 'Create' }}
-          </Button>
-        </div>
-      </template>
+      <OrganizationForm
+        :is-loading="organizationsStore.loading"
+        :is-editing="false"
+        @submit="handleCreateSubmit"
+        @cancel="showCreateModal = false"
+      />
     </Modal>
 
     <!-- Delete Confirmation Modal -->
     <Modal v-model="showDeleteConfirm" title="Delete Organization">
       <div>
+        <Alert type="warning" class="mb-4">
+          <strong>Warning:</strong> This action cannot be undone. All associated data may be affected.
+        </Alert>
         <p class="text-gray-600">
           Are you sure you want to delete
-          <strong>{{ selectedForDelete?.name }}</strong>
-          ? This action cannot be undone.
+          <strong class="text-gray-900">{{ selectedForDelete?.name }}</strong>
+          ?
         </p>
       </div>
 
       <template #footer>
         <div class="flex gap-3 justify-end">
           <Button @click="showDeleteConfirm = false" variant="secondary">Cancel</Button>
-          <Button @click="handleDelete" variant="danger" :disabled="organizationsStore.loading">
-            {{ organizationsStore.loading ? 'Deleting...' : 'Delete' }}
+          <Button
+            @click="handleDelete"
+            variant="danger"
+            :disabled="organizationsStore.loading"
+          >
+            {{ organizationsStore.loading ? 'Deleting...' : 'Delete Organization' }}
           </Button>
         </div>
       </template>

@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosInstance, AxiosError } from 'axios'
+import type { AxiosResponse } from 'axios'
 
 const ONBOARDING_API = import.meta.env.VITE_ONBOARDING_API || 'http://localhost:3000'
 const TRANSACTION_API = import.meta.env.VITE_TRANSACTION_API || 'http://localhost:3001'

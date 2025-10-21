@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { useUiStore } from './stores/ui'
+import { useUIStore } from '@/stores'
 
-const uiStore = useUiStore()
+const uiStore = useUIStore()
 </script>
 
 <template>

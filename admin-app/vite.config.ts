@@ -6,12 +6,13 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
-      '@components': resolve(__dirname, './src/components'),
-      '@stores': resolve(__dirname, './src/stores'),
-      '@services': resolve(__dirname, './src/api/services'),
-      '@types': resolve(__dirname, './src/types'),
-      '@utils': resolve(__dirname, './src/utils'),
+      '@': resolve(__dirname, './app'),
+      '@components': resolve(__dirname, './app/components'),
+      '@stores': resolve(__dirname, './app/stores'),
+      '@services': resolve(__dirname, './app/api/services'),
+      '@types': resolve(__dirname, './app/types'),
+      '@utils': resolve(__dirname, './app/utils'),
+      '@pages': resolve(__dirname, './app/pages'),
     },
   },
   server: {

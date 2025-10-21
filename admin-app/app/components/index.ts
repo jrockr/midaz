@@ -15,3 +15,6 @@ export { default as Skeleton } from './common/Skeleton.vue'
 export { default as Layout } from './layout/Layout.vue'
 export { default as Sidebar } from './layout/Sidebar.vue'
 export { default as TopBar } from './layout/TopBar.vue'
+
+// Organizations Module
+export * from './organizations'
