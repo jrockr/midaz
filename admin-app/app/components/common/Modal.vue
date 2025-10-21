@@ -11,7 +11,6 @@ interface Props {
   title?: string
   size?: 'sm' | 'md' | 'lg'
   closeButton?: boolean
-  type?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -26,8 +25,6 @@ const emit = defineEmits<{
   close: []
   confirm: []
 }>()
-
-const sizeClasses = computed(() => {
   switch (props.size) {
     case 'sm':
       return 'max-w-sm'

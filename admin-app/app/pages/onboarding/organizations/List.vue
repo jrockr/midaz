@@ -24,9 +24,9 @@ const filteredItems = computed(() => {
   if (!searchQuery.value) return organizationsStore.items
   const query = searchQuery.value.toLowerCase()
   return organizationsStore.items.filter((org: Organization) =>
-    org.name.toLowerCase().includes(query) ||
+    org.legalName.toLowerCase().includes(query) ||
     org.id.toLowerCase().includes(query) ||
-    (org.code && org.code.toLowerCase().includes(query))
+    (org.doingBusinessAs && org.doingBusinessAs.toLowerCase().includes(query))
   )
 })
 
@@ -147,7 +147,7 @@ const handlePaginate = (page: number) => {
           <Input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by name, ID, or code..."
+            placeholder="Search by legal name, ID, or business name..."
             class="flex-1"
           />
           <Button @click="loadOrganizations" variant="secondary">

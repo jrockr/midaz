@@ -3,30 +3,47 @@
  */
 export interface Organization {
   id: string
-  name: string
-  code?: string
-  description?: string
-  parentId?: string | null
-  status: 'ACTIVE' | 'INACTIVE'
+  legalName: string
+  doingBusinessAs?: string
+  legalDocument: string
+  parentOrganizationId?: string | null
+  address?: Address
+  status: Status
   metadata?: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
 
+export interface Address {
+  line1: string
+  line2?: string
+  zipCode: string
+  city: string
+  state: string
+  country: string
+}
+
+export interface Status {
+  code: 'ACTIVE' | 'INACTIVE'
+}
+
 export interface CreateOrganizationDto {
-  name: string
-  code?: string
-  description?: string
-  parentId?: string
+  legalName: string
+  legalDocument: string
+  doingBusinessAs?: string
+  parentOrganizationId?: string | null
+  address?: Address
+  status?: Status
   metadata?: Record<string, unknown>
 }
 
 export interface UpdateOrganizationDto {
-  name?: string
-  code?: string
-  description?: string
-  parentId?: string
-  status?: 'ACTIVE' | 'INACTIVE'
+  legalName?: string
+  legalDocument?: string
+  doingBusinessAs?: string
+  parentOrganizationId?: string | null
+  address?: Address
+  status?: Status
   metadata?: Record<string, unknown>
 }
 

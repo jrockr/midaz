@@ -6,7 +6,7 @@ interface Props {
   label?: string
   placeholder?: string
   type?: string
-  error?: string
+  error?: string | boolean
   disabled?: boolean
   required?: boolean
   icon?: string

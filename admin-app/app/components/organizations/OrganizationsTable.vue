@@ -36,8 +36,8 @@ const showActionsMenu = ref<string | null>(null)
 
 const columns = [
   { key: 'id', label: 'ID', width: '15%', sortable: true },
-  { key: 'name', label: 'Name', width: '25%', sortable: true },
-  { key: 'code', label: 'Code', width: '15%', sortable: false },
+  { key: 'legalName', label: 'Legal Name', width: '25%', sortable: true },
+  { key: 'legalDocument', label: 'Legal Document', width: '15%', sortable: false },
   { key: 'status', label: 'Status', width: '12%', sortable: true },
   { key: 'createdAt', label: 'Created', width: '18%', sortable: true },
   { key: 'actions', label: 'Actions', width: '15%', sortable: false },
@@ -66,8 +66,9 @@ const handlePageChange = (newPage: number) => {
   }
 }
 
-const getStatusBadgeVariant = (status: string) => {
-  return status === 'ACTIVE' ? 'success' : 'warning'
+const getStatusBadgeVariant = (status: any) => {
+  const statusCode = status?.code || status
+  return statusCode === 'ACTIVE' ? 'success' : 'warning'
 }
 
 const copyToClipboard = (text: string) => {
@@ -183,21 +184,21 @@ const copyToClipboard = (text: string) => {
             </div>
           </td>
 
-          <!-- Name Column -->
+          <!-- Legal Name Column -->
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            {{ org.name }}
+            {{ org.legalName }}
           </td>
 
-          <!-- Code Column -->
+          <!-- Legal Document Column -->
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-            {{ org.code || '-' }}
+            {{ org.legalDocument || '-' }}
           </td>
 
           <!-- Status Column -->
           <td class="px-6 py-4 whitespace-nowrap">
             <Badge
               :variant="getStatusBadgeVariant(org.status)"
-              :label="org.status"
+              :label="org.status?.code || org.status"
             />
           </td>
 

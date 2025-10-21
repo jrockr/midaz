@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { Button, Input, Modal, Alert, Card } from '@/components'
-import type { Organization, CreateOrganizationDto, UpdateOrganizationDto } from '@/types'
+import type { Organization, CreateOrganizationDto, UpdateOrganizationDto, Address } from '@/types'
 
 interface Props {
   organization?: Organization | null
@@ -24,20 +24,29 @@ const emit = defineEmits<Emits>()
 const STORAGE_KEY = 'organization-form-draft'
 
 const formData = reactive<{
-  name: string
-  code: string
-  description: string
-  parentId: string | null
+  legalName: string
+  legalDocument: string
+  doingBusinessAs: string
+  parentOrganizationId: string | null
+  address: Address
   metadata: Record<string, unknown>
 }>({
-  name: '',
-  code: '',
-  description: '',
-  parentId: null,
+  legalName: '',
+  legalDocument: '',
+  doingBusinessAs: '',
+  parentOrganizationId: null,
+  address: {
+    line1: '',
+    line2: '',
+    zipCode: '',
+    city: '',
+    state: '',
+    country: '',
+  },
   metadata: {},
 })
 
-const errors = reactive<Record<string, string>>({})
+const errors = reactive<Record<string, string | boolean>>({})
 const showMetadataEditor = ref(false)
 const metadataJson = ref('{}')
 const dirtyFields = ref<Set<string>>(new Set())
@@ -50,10 +59,18 @@ const formTitle = computed(() => (props.isEditing ? 'Edit Organization' : 'Creat
 // Initialize form with existing data or from localStorage
 onMounted(() => {
   if (props.organization) {
-    formData.name = props.organization.name
-    formData.code = props.organization.code || ''
-    formData.description = props.organization.description || ''
-    formData.parentId = props.organization.parentId || null
+    formData.legalName = props.organization.legalName
+    formData.legalDocument = props.organization.legalDocument
+    formData.doingBusinessAs = props.organization.doingBusinessAs || ''
+    formData.parentOrganizationId = props.organization.parentOrganizationId || null
+    formData.address = props.organization.address || {
+      line1: '',
+      line2: '',
+      zipCode: '',
+      city: '',
+      state: '',
+      country: '',
+    }
     formData.metadata = props.organization.metadata || {}
     metadataJson.value = JSON.stringify(props.organization.metadata || {}, null, 2)
   } else {
@@ -73,22 +90,24 @@ onMounted(() => {
 
 // Validation
 const validateForm = () => {
-  errors.name = ''
-  errors.code = ''
-  errors.description = ''
+  errors.legalName = ''
+  errors.legalDocument = ''
+  errors.address = ''
 
-  if (!formData.name?.trim()) {
-    errors.name = 'Organization name is required'
-  } else if (formData.name.length < 2) {
-    errors.name = 'Organization name must be at least 2 characters'
+  if (!formData.legalName?.trim()) {
+    errors.legalName = 'Legal name is required'
+  } else if (formData.legalName.length < 2) {
+    errors.legalName = 'Legal name must be at least 2 characters'
   }
 
-  if (formData.code && formData.code.length < 2) {
-    errors.code = 'Code must be at least 2 characters'
+  if (!formData.legalDocument?.trim()) {
+    errors.legalDocument = 'Legal document is required'
+  } else if (formData.legalDocument.length < 2) {
+    errors.legalDocument = 'Legal document must be at least 2 characters'
   }
 
-  if (formData.description && formData.description.length > 500) {
-    errors.description = 'Description must not exceed 500 characters'
+  if (formData.address.line1 && formData.address.line1.length > 256) {
+    errors.address = 'Address line 1 must not exceed 256 characters'
   }
 
   return !hasErrors.value
@@ -140,10 +159,18 @@ const resetForm = () => {
   if (!isDirty.value) return
   if (confirm('Are you sure you want to discard your changes?')) {
     Object.assign(formData, {
-      name: props.organization?.name || '',
-      code: props.organization?.code || '',
-      description: props.organization?.description || '',
-      parentId: props.organization?.parentId || null,
+      legalName: props.organization?.legalName || '',
+      legalDocument: props.organization?.legalDocument || '',
+      doingBusinessAs: props.organization?.doingBusinessAs || '',
+      parentOrganizationId: props.organization?.parentOrganizationId || null,
+      address: props.organization?.address || {
+        line1: '',
+        line2: '',
+        zipCode: '',
+        city: '',
+        state: '',
+        country: '',
+      },
       metadata: props.organization?.metadata || {},
     })
     metadataJson.value = JSON.stringify(props.organization?.metadata || {}, null, 2)
@@ -164,17 +191,19 @@ const handleSubmit = async () => {
 
   const payload = props.isEditing
     ? ({
-        name: formData.name,
-        code: formData.code,
-        description: formData.description,
-        parentId: formData.parentId,
+        legalName: formData.legalName,
+        legalDocument: formData.legalDocument,
+        doingBusinessAs: formData.doingBusinessAs,
+        parentOrganizationId: formData.parentOrganizationId,
+        address: formData.address,
         metadata: formData.metadata,
       } as UpdateOrganizationDto)
     : ({
-        name: formData.name,
-        code: formData.code,
-        description: formData.description,
-        parentId: formData.parentId,
+        legalName: formData.legalName,
+        legalDocument: formData.legalDocument,
+        doingBusinessAs: formData.doingBusinessAs,
+        parentOrganizationId: formData.parentOrganizationId,
+        address: formData.address,
         metadata: formData.metadata,
       } as CreateOrganizationDto)
 
@@ -208,56 +237,146 @@ const handleCancel = () => {
 
     <!-- Main Form Fields -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Name Field -->
+      <!-- Legal Name Field -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Organization Name <span class="text-red-500">*</span>
+          Legal Name <span class="text-red-500">*</span>
         </label>
         <Input
-          v-model="formData.name"
+          v-model="formData.legalName"
           type="text"
-          placeholder="e.g., Acme Corporation"
-          :error="errors.name || ''"
-          @update:modelValue="markDirty('name')"
+          placeholder="e.g., Lerian Financial Services Ltd."
+          :error="errors.legalName as string"
+          @update:modelValue="markDirty('legalName')"
           class="w-full"
         />
-        <p v-if="errors.name" class="text-red-600 text-xs mt-1">{{ errors.name }}</p>
+        <p v-if="errors.legalName" class="text-red-600 text-xs mt-1">{{ errors.legalName }}</p>
       </div>
 
-      <!-- Code Field -->
+      <!-- Legal Document Field -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Organization Code
+          Legal Document <span class="text-red-500">*</span>
         </label>
         <Input
-          v-model="formData.code"
+          v-model="formData.legalDocument"
           type="text"
-          placeholder="e.g., ACME"
-          :error="errors.code || ''"
-          @update:modelValue="markDirty('code')"
+          placeholder="e.g., 123456789012345"
+          :error="errors.legalDocument as string"
+          @update:modelValue="markDirty('legalDocument')"
           class="w-full"
         />
-        <p v-if="errors.code" class="text-red-600 text-xs mt-1">{{ errors.code }}</p>
+        <p v-if="errors.legalDocument" class="text-red-600 text-xs mt-1">{{ errors.legalDocument }}</p>
       </div>
 
-      <!-- Description Field (Full Width) -->
+      <!-- Doing Business As Field (Full Width) -->
       <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Description
+          Doing Business As
         </label>
-        <textarea
-          v-model="formData.description"
-          placeholder="Provide a description for this organization"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          rows="4"
-          @change="markDirty('description')"
+        <Input
+          v-model="formData.doingBusinessAs"
+          type="text"
+          placeholder="e.g., Lerian FS"
+          @update:modelValue="markDirty('doingBusinessAs')"
+          class="w-full"
         />
-        <p v-if="errors.description" class="text-red-600 text-xs mt-1">{{ errors.description }}</p>
-        <p class="text-gray-500 text-xs mt-1">
-          {{ formData.description.length }} / 500 characters
-        </p>
       </div>
     </div>
+
+    <!-- Address Section -->
+    <Card class="bg-gray-50 p-4">
+      <div class="mb-4">
+        <h3 class="text-sm font-semibold text-gray-900">Address Information</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Address Line 1 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Address Line 1
+          </label>
+          <Input
+            v-model="formData.address.line1"
+            type="text"
+            placeholder="Street address"
+            @update:modelValue="markDirty('address')"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Address Line 2 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Address Line 2
+          </label>
+          <Input
+            v-model="formData.address.line2"
+            type="text"
+            placeholder="Apartment, suite, etc."
+            @update:modelValue="markDirty('address')"
+            class="w-full"
+          />
+        </div>
+
+        <!-- City -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            City
+          </label>
+          <Input
+            v-model="formData.address.city"
+            type="text"
+            placeholder="City name"
+            @update:modelValue="markDirty('address')"
+            class="w-full"
+          />
+        </div>
+
+        <!-- State -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            State/Province
+          </label>
+          <Input
+            v-model="formData.address.state"
+            type="text"
+            placeholder="State or province"
+            @update:modelValue="markDirty('address')"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Zip Code -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Zip/Postal Code
+          </label>
+          <Input
+            v-model="formData.address.zipCode"
+            type="text"
+            placeholder="Postal code"
+            @update:modelValue="markDirty('address')"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Country -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Country
+          </label>
+          <Input
+            v-model="formData.address.country"
+            type="text"
+            placeholder="Country code (e.g., US)"
+            @update:modelValue="markDirty('address')"
+            class="w-full"
+            maxlength="2"
+          />
+        </div>
+      </div>
+      <p v-if="errors.address" class="text-red-600 text-xs mt-2">{{ errors.address }}</p>
+    </Card>
 
     <!-- Metadata Section -->
     <Card class="bg-gray-50 p-4">
