@@ -147,9 +147,29 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../pages/transactions/List.vue'),
       },
       {
+        path: '/transactions/create',
+        name: 'CreateTransaction',
+        component: () => import('../pages/transactions/Create.vue'),
+      },
+      {
         path: '/transactions/:id',
         name: 'TransactionDetail',
         component: () => import('../pages/transactions/Detail.vue'),
+      },
+      {
+        path: '/transactions/approval',
+        name: 'TransactionApprovals',
+        component: () => import('../pages/transactions/Approval.vue'),
+      },
+      {
+        path: '/transactions/batch',
+        name: 'TransactionBatch',
+        component: () => import('../pages/transactions/Batch.vue'),
+      },
+      {
+        path: '/search',
+        name: 'AdvancedSearch',
+        component: () => import('../pages/search/Advanced.vue'),
       },
       {
         path: '/balances',
