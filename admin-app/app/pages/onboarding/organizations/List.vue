@@ -10,7 +10,7 @@ const router = useRouter()
 const organizationsStore = useOrganizationsStore()
 const uiStore = useUIStore()
 
-const showCreateModal = ref(false)
+
 const showDeleteConfirm = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
@@ -64,18 +64,7 @@ const loadOrganizations = async () => {
   }
 }
 
-const handleCreateSubmit = async (formData: CreateOrganizationDto) => {
-  try {
-    await organizationsStore.create(formData)
-    showCreateModal.value = false
-    currentPage.value = 1
-    await loadOrganizations()
-    uiStore.showToast('Organization created successfully', 'success')
-  } catch (error) {
-    console.error('Failed to create organization:', error)
-    uiStore.showToast('Failed to create organization', 'error')
-  }
-}
+
 
 const viewDetail = (org: Organization) => {
   router.push(`/organizations/${org.id}`)
@@ -133,7 +122,7 @@ const handlePaginate = (page: number) => {
           <h1 class="text-3xl font-bold text-gray-900">Organizations</h1>
           <p class="text-gray-600 mt-2">Manage your organizations and their settings</p>
         </div>
-        <Button @click="showCreateModal = true" variant="primary" size="md">
+        <Button @click="router.push('/organizations/create')" variant="primary" size="md">
           <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -182,16 +171,6 @@ const handlePaginate = (page: number) => {
         />
       </Card>
     </div>
-
-    <!-- Create Organization Modal -->
-    <Modal v-model="showCreateModal" title="Create Organization">
-      <OrganizationForm
-        :is-loading="organizationsStore.loading"
-        :is-editing="false"
-        @submit="handleCreateSubmit"
-        @cancel="showCreateModal = false"
-      />
-    </Modal>
 
     <!-- Delete Confirmation Modal -->
     <Modal v-model="showDeleteConfirm" title="Delete Organization">

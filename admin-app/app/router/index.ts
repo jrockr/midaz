@@ -23,6 +23,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../pages/onboarding/organizations/List.vue'),
       },
       {
+        path: '/organizations/create',
+        name: 'CreateOrganization',
+        component: () => import('../pages/onboarding/organizations/Create.vue'),
+      },
+      {
         path: '/organizations/:id',
         name: 'OrganizationDetail',
         component: () => import('../pages/onboarding/organizations/Detail.vue'),
@@ -31,6 +36,11 @@ const routes: RouteRecordRaw[] = [
         path: '/ledgers',
         name: 'Ledgers',
         component: () => import('../pages/onboarding/ledgers/List.vue'),
+      },
+      {
+        path: '/ledgers/create',
+        name: 'CreateLedger',
+        component: () => import('../pages/onboarding/ledgers/Create.vue'),
       },
       {
         path: '/ledgers/:id',
@@ -43,6 +53,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../pages/onboarding/accounts/List.vue'),
       },
       {
+        path: '/accounts/create',
+        name: 'CreateAccount',
+        component: () => import('../pages/onboarding/accounts/Create.vue'),
+      },
+      {
         path: '/accounts/:id',
         name: 'AccountDetail',
         component: () => import('../pages/onboarding/accounts/Detail.vue'),
@@ -51,6 +66,11 @@ const routes: RouteRecordRaw[] = [
         path: '/assets',
         name: 'Assets',
         component: () => import('../pages/onboarding/assets/List.vue'),
+      },
+      {
+        path: '/assets/create',
+        name: 'CreateAsset',
+        component: () => import('../pages/onboarding/assets/Create.vue'),
       },
       {
         path: '/assets/:id',

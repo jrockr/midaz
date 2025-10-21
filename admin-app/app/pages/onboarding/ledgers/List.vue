@@ -75,12 +75,6 @@ const loadLedgers = async () => {
   }
 }
 
-const openCreateModal = () => {
-  selectedForEdit.value = null
-  isEditMode.value = false
-  showCreateModal.value = true
-}
-
 const closeCreateModal = () => {
   showCreateModal.value = false
   selectedForEdit.value = null
@@ -161,7 +155,7 @@ const handlePaginate = (page: number) => {
           <h1 class="text-3xl font-bold text-gray-900">Ledgers</h1>
           <p class="text-gray-600 mt-2">Manage financial ledgers and accounts</p>
         </div>
-        <Button @click="openCreateModal" variant="primary" size="md">
+        <Button @click="router.push('/ledgers/create')" variant="primary" size="md">
           <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
