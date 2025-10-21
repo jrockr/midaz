@@ -25,6 +25,8 @@ const emit = defineEmits<{
   close: []
   confirm: []
 }>()
+
+const sizeClasses = computed(() => {
   switch (props.size) {
     case 'sm':
       return 'max-w-sm'
