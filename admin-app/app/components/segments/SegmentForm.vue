@@ -57,6 +57,23 @@
       </p>
     </div>
 
+    <!-- Parent Segment (Optional) -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Parent Segment (Optional)
+      </label>
+      <select
+        v-model="form.parentSegmentId"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">None (Top Level)</option>
+        <option v-for="segment in availableParents" :key="segment.id" :value="segment.id">
+          {{ segment.name }}
+        </option>
+      </select>
+      <p class="mt-1 text-sm text-gray-500">Select a parent to create a hierarchical segment</p>
+    </div>
+
     <!-- Description -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -177,6 +194,7 @@ import type { Segment } from "@/types";
 
 interface Props {
   segment?: Segment;
+  segments?: Segment[];
   loading?: boolean;
 }
 
@@ -195,6 +213,7 @@ const form = ref({
   organizationId: "",
   code: "",
   name: "",
+  parentSegmentId: "",
   description: "",
   status: "ACTIVE",
   metadata: "{}",
@@ -225,6 +244,11 @@ const metadataPreview = computed(() => {
 });
 
 const organizations = computed(() => organizationsStore.items);
+
+const availableParents = computed(() => {
+  if (!props.segments) return [];
+  return props.segments.filter((s) => s.id !== props.segment?.id);
+});
 
 const validateOrganization = () => {
   if (!form.value.organizationId) {
@@ -278,6 +302,7 @@ const handleSubmit = () => {
     organizationId: form.value.organizationId,
     code: form.value.code,
     name: form.value.name,
+    parentSegmentId: form.value.parentSegmentId || undefined,
     description: form.value.description,
     status: form.value.status,
     metadata: form.value.metadata ? JSON.parse(form.value.metadata) : {},
