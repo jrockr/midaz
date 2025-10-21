@@ -172,6 +172,21 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../pages/search/Advanced.vue'),
       },
       {
+        path: '/balance/reconciliation',
+        name: 'BalanceReconciliation',
+        component: () => import('../pages/balance/Reconciliation.vue'),
+      },
+      {
+        path: '/monitoring',
+        name: 'MonitoringDashboard',
+        component: () => import('../pages/monitoring/Dashboard.vue'),
+      },
+      {
+        path: '/analytics',
+        name: 'AnalyticsDashboard',
+        component: () => import('../pages/analytics/Dashboard.vue'),
+      },
+      {
         path: '/balances',
         name: 'Balances',
         component: () => import('../pages/transactions/balances/List.vue'),
