@@ -191,8 +191,8 @@ interface Emits {
   (e: 'cancel'): void
 }
 
-defineProps<Props>()
-defineEmits<Emits>()
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 const organizationsStore = useOrganizationsStore()
 
@@ -294,7 +294,6 @@ const handleSubmit = async () => {
     metadata: form.value.metadata
   }
 
-  const emit = defineEmits<Emits>()[0]
   emit('submit', payload)
 }
 

@@ -262,7 +262,7 @@ const handlePaginate = (page: number) => {
     </Modal>
 
     <!-- Delete Confirmation Modal -->
-    <Modal v-model="showDeleteConfirm" title="Delete Account" type="danger">
+    <Modal v-model="showDeleteConfirm" title="Delete Account">
       <div class="space-y-4">
         <p class="text-gray-600">
           Are you sure you want to delete <strong>{{ selectedForDelete?.alias }}</strong> ({{ selectedForDelete?.accountName }})?
