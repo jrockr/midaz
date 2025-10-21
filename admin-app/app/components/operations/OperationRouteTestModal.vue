@@ -91,8 +91,6 @@ const testResult = ref<any>(null);
 const testError = ref<string>("");
 const route = ref<OperationRoute | null>(null);
 
-const props = defineProps<Props>();
-
 const runTest = async () => {
   if (!testAmount.value || !route.value) return;
 

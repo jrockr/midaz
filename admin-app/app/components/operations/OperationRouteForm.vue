@@ -231,8 +231,6 @@ const handleSubmit = () => {
   emit("submit", formData);
 };
 
-const emit = defineEmits<Emits>();
-
 onMounted(() => {
   ledgersStore.fetchAll();
 });

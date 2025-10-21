@@ -159,8 +159,6 @@ const totalPages = computed(() => {
   return Math.ceil((props.pagination.total || 1) / props.pagination.limit);
 });
 
-const props = defineProps<Props>();
-
 const formatDate = (date: string | Date | undefined): string => {
   if (!date) return "N/A";
   return new Date(date).toLocaleDateString();

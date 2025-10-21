@@ -147,8 +147,6 @@ const totalPages = computed(() => {
   return Math.ceil((props.pagination.total || 1) / props.pagination.limit);
 });
 
-const props = defineProps<Props>();
-
 const truncateId = (id: string): string => {
   return id.substring(0, 8) + "...";
 };
