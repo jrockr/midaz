@@ -203,8 +203,8 @@ interface Emits {
   (e: "cancel"): void;
 }
 
-defineProps<Props>();
-defineEmits<Emits>();
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 
 const route = useRoute();
 const organizationsStore = useOrganizationsStore();
@@ -243,11 +243,11 @@ const metadataPreview = computed(() => {
   }
 });
 
-const organizations = computed(() => organizationsStore.items);
+const organizations = computed(() => organizationsStore.items || []);
 
 const availableParents = computed(() => {
-  if (!props.segments) return [];
-  return props.segments.filter((s) => s.id !== props.segment?.id);
+  const segments = props.segments || [];
+  return segments.filter((s) => s.id !== props.segment?.id);
 });
 
 const validateOrganization = () => {
@@ -312,7 +312,19 @@ const handleSubmit = () => {
 };
 
 
-onMounted(() => {
-  organizationsStore.fetchAll();
+onMounted(async () => {
+  await organizationsStore.fetch();
+  
+  if (props.segment) {
+    form.value = {
+      organizationId: props.segment.organizationId || "",
+      code: props.segment.code || "",
+      name: props.segment.name || "",
+      parentSegmentId: props.segment.parentSegmentId || "",
+      description: props.segment.description || "",
+      status: props.segment.status || "ACTIVE",
+      metadata: props.segment.metadata ? JSON.stringify(props.segment.metadata, null, 2) : "{}",
+    };
+  }
 });
 </script>
