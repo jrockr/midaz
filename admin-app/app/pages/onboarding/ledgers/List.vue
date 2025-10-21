@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Table, Modal, Input, Alert, Spinner, Card } from '@/components'
+import { Button, Table, Modal, Input, Alert, Spinner, Card, Breadcrumb, Skeleton } from '@/components'
 import { useLedgersStore } from '@/stores'
 import type { Ledger } from '@/types'
 
@@ -129,6 +129,11 @@ const formatDate = (dateString: string) => {
 <template>
   <main class="flex-1 overflow-auto">
     <div class="px-6 py-8">
+      <!-- Breadcrumb -->
+      <div class="mb-6">
+        <Breadcrumb />
+      </div>
+
       <!-- Header -->
       <div class="flex items-center justify-between mb-8">
         <div>
@@ -166,9 +171,11 @@ const formatDate = (dateString: string) => {
         {{ ledgersStore.error }}
       </Alert>
 
-      <!-- Loading State -->
-      <div v-if="ledgersStore.loading" class="flex items-center justify-center py-12">
-        <Spinner size="md" />
+      <!-- Loading State with Skeleton -->
+      <div v-if="ledgersStore.loading && ledgersStore.items.length === 0" class="mb-6">
+        <Card class="p-6">
+          <Skeleton type="table-row" :count="5" />
+        </Card>
       </div>
 
       <!-- Table -->

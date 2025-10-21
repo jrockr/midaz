@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Button, Card, Input, Alert, Spinner } from '@/components'
+import { Button, Card, Input, Alert, Spinner, Breadcrumb } from '@/components'
 import { useOrganizationsStore } from '@/stores'
 import type { Organization } from '@/types'
 
@@ -74,6 +74,11 @@ const formatDate = (dateString: string) => {
 <template>
   <main class="flex-1 overflow-auto">
     <div class="px-6 py-8">
+      <!-- Breadcrumb -->
+      <div class="mb-6">
+        <Breadcrumb />
+      </div>
+
       <!-- Header -->
       <div class="flex items-center justify-between mb-8">
         <div class="flex items-center gap-4">
