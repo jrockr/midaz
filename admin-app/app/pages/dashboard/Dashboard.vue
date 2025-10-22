@@ -14,8 +14,8 @@ const stats = reactive({
 
 onMounted(async () => {
   try {
-    await organizationsStore.fetch({ limit: 1 })
-    stats.organizations = organizationsStore.items.length
+    await organizationsStore.fetch({ limit: 100 })
+    stats.organizations = organizationsStore.pagination.total || organizationsStore.items.length
   } catch (error) {
     console.error('Failed to load dashboard stats:', error)
   }

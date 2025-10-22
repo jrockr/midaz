@@ -44,10 +44,11 @@ const ledgersStore = useLedgersStore();
 const loading = ref(false);
 const toast = ref({ show: false, message: "", type: "success" as "success" | "error" });
 
-const handleSubmit = async (formData: CreateLedgerDto) => {
+const handleSubmit = async (formData: any) => {
   loading.value = true;
   try {
-    await ledgersStore.create(formData);
+    const { organizationId, ...payload } = formData;
+    await ledgersStore.create(organizationId, payload);
     showToast("Ledger created successfully", "success");
     setTimeout(() => router.push("/ledgers"), 1500);
   } catch (error) {

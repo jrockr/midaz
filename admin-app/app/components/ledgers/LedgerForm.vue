@@ -13,31 +13,11 @@
       >
         <option value="">Select an organization</option>
         <option v-for="org in organizations" :key="org.id" :value="org.id">
-          {{ org.name }}
+          {{ org.legalName }}
         </option>
       </select>
       <p v-if="errors.organizationId" class="mt-1 text-sm text-red-500">
         {{ errors.organizationId }}
-      </p>
-    </div>
-
-    <!-- Currency Selector -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        Currency <span class="text-red-500">*</span>
-      </label>
-      <select
-        v-model="form.currency"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        @blur="validateCurrency"
-      >
-        <option value="">Select a currency</option>
-        <option v-for="curr in currencies" :key="curr" :value="curr">
-          {{ curr }}
-        </option>
-      </select>
-      <p v-if="errors.currency" class="mt-1 text-sm text-red-500">
-        {{ errors.currency }}
       </p>
     </div>
 
@@ -56,19 +36,6 @@
       <p v-if="errors.name" class="mt-1 text-sm text-red-500">
         {{ errors.name }}
       </p>
-    </div>
-
-    <!-- Description -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        Description
-      </label>
-      <textarea
-        v-model="form.description"
-        placeholder="Enter ledger description"
-        rows="3"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
     </div>
 
     <!-- Status -->
@@ -197,17 +164,9 @@ const emit = defineEmits<Emits>()
 
 const organizationsStore = useOrganizationsStore()
 
-// Currency list (ISO 4217 common currencies)
-const currencies = [
-  'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD',
-  'MXN', 'SGD', 'HKD', 'NOK', 'KRW', 'TRY', 'RUB', 'INR', 'BRL', 'ZAR'
-]
-
 const form = ref({
   organizationId: '',
-  currency: '',
   name: '',
-  description: '',
   status: 'ACTIVE' as const,
   metadata: {} as Record<string, unknown>
 })
@@ -215,7 +174,6 @@ const form = ref({
 const initialForm = ref({ ...form.value })
 const errors = ref({
   organizationId: '',
-  currency: '',
   name: ''
 })
 
@@ -245,10 +203,8 @@ watch(
     if (newLedger) {
       form.value = {
         organizationId: newLedger.organizationId || '',
-        currency: '', // Extract from metadata or another field if available
         name: newLedger.name,
-        description: '', // Add if available in type
-        status: newLedger.status,
+        status: newLedger.status?.code || newLedger.status,
         metadata: newLedger.metadata || {}
       }
       initialForm.value = { ...form.value }
@@ -262,19 +218,14 @@ const validateOrganization = () => {
   errors.value.organizationId = form.value.organizationId ? '' : 'Organization is required'
 }
 
-const validateCurrency = () => {
-  errors.value.currency = form.value.currency ? '' : 'Currency is required'
-}
-
 const validateName = () => {
   errors.value.name = form.value.name.trim() ? '' : 'Name is required'
 }
 
 const validateForm = () => {
   validateOrganization()
-  validateCurrency()
   validateName()
-  return !errors.value.organizationId && !errors.value.currency && !errors.value.name
+  return !errors.value.organizationId && !errors.value.name
 }
 
 const saveMetadata = () => {
@@ -296,7 +247,7 @@ const handleSubmit = async () => {
     metadata: form.value.metadata
   }
 
-  if (!isEditMode.value && form.value.organizationId) {
+  if (!props.isEditing && form.value.organizationId) {
     (payload as any).organizationId = form.value.organizationId
   }
 
