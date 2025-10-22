@@ -21,7 +21,6 @@ const selectedForDelete = ref<Organization | null>(null)
 const pageSize = 10
 
 const filteredItems = computed(() => {
-  console.log('Organizations in store:', organizationsStore.items.length)
   if (!searchQuery.value) return organizationsStore.items
   const query = searchQuery.value.toLowerCase()
   return organizationsStore.items.filter((org: Organization) =>
@@ -58,9 +57,7 @@ onMounted(() => {
 
 const loadOrganizations = async () => {
   try {
-    console.log('Loading organizations...')
     await organizationsStore.fetch({ limit: 100 })
-    console.log('Organizations loaded, count:', organizationsStore.items.length)
   } catch (error) {
     console.error('Failed to load organizations:', error)
     uiStore.showToast('Failed to load organizations', 'error')

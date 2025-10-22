@@ -26,21 +26,10 @@ export const useOrganizationsStore = defineStore('organizations', () => {
     error.value = null
     try {
       const response = await organizationsService.list(params)
-      // Handle different response structures
-      if (Array.isArray(response)) {
-        items.value = response
-      } else if (response.data) {
-        items.value = Array.isArray(response.data) ? response.data : [response.data]
-      } else if (response.items) {
-        items.value = response.items
-      } else {
-        items.value = []
-      }
-      
+      items.value = response.items || []
       if (response.pagination) {
         pagination.value = response.pagination
       }
-      console.log('Organizations loaded:', items.value.length)
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch organizations'
       error.value = errorMessage

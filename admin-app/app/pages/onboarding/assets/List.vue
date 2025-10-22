@@ -79,7 +79,7 @@ const filteredOrganizations = computed(() => {
   if (!orgSearchQuery.value) return organizationsStore.items
   const query = orgSearchQuery.value.toLowerCase()
   return organizationsStore.items.filter(org => 
-    org.name.toLowerCase().includes(query) || org.id.toLowerCase().includes(query)
+    org.legalName.toLowerCase().includes(query) || org.id.toLowerCase().includes(query)
   )
 })
 
@@ -232,7 +232,7 @@ const handlePaginate = (page: number) => {
             >
               <option value="">Select an organization</option>
               <option v-for="org in filteredOrganizations" :key="org.id" :value="org.id">
-                {{ org.name }}
+                {{ org.legalName }}
               </option>
             </select>
           </div>

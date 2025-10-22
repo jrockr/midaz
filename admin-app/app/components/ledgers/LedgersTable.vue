@@ -109,11 +109,11 @@
             <span
               :class="{
                 'px-3 py-1 rounded-full text-xs font-medium': true,
-                'bg-green-100 text-green-800': ledger.status === 'ACTIVE',
-                'bg-gray-100 text-gray-800': ledger.status === 'INACTIVE'
+                'bg-green-100 text-green-800': (ledger.status?.code || ledger.status) === 'ACTIVE',
+                'bg-gray-100 text-gray-800': (ledger.status?.code || ledger.status) === 'INACTIVE'
               }"
             >
-              {{ ledger.status }}
+              {{ ledger.status?.code || ledger.status }}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -238,7 +238,7 @@ const handleSort = (column: string) => {
 
 const getOrgName = (orgId: string) => {
   const org = organizationsStore.items.find(o => o.id === orgId)
-  return org?.name || orgId
+  return org?.legalName || orgId
 }
 
 const formatDate = (date: string) => {

@@ -17,7 +17,7 @@ export const useLedgersStore = defineStore('ledgers', () => {
     error.value = null
     try {
       const response = await ledgersService.list(params.organizationId, params)
-      items.value = response.data || []
+      items.value = response.items || []
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch ledgers'
     } finally {

@@ -21,7 +21,7 @@ interface Emits {
   delete: (org: Organization) => void
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   loading: false,
   sortBy: 'createdAt',
   sortDir: 'desc',
